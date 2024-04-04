@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: portalasig-ms-uaa
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:11018/sstest
+    username: root
+    password: password
+  jpa:
+    hibernate.ddl-auto: none
+    open-in-view: true
+  flyway:
+    enabled: true
+    url: jdbc:mysql://localhost:11018/
+    password: password
+    user: root
+    schemas: sstest
+    locations: classpath:db/migration
+server:
+  servlet:
+    context-path: /portalasig/uaa
