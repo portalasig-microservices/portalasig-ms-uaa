@@ -12,6 +12,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -24,7 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
@@ -34,15 +38,32 @@ public class UserService {
 
     private final List<String> defaultRoleTypes = List.of(RoleType.USER.toString());
 
-    private final UserMapper userMapper;
+    private UserMapper userMapper;
 
-    public UserEntity registerUser(RegisterRequest request) {
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByEmail(username)
+                .map(user -> {
+                    List<RoleEntity> roles = user.getRoles();
+                    List<SimpleGrantedAuthority> authorities = roles.stream()
+                            .map(role -> new SimpleGrantedAuthority(role.getName()))
+                            .toList();
+                    return new org.springframework.security.core.userdetails.User(
+                            user.getEmail(),
+                            user.getPassword(),
+                            authorities
+                    );
+                }).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public User registerUser(RegisterRequest request) {
         if (!userRepository.existsByUsername(request.getEmail())) {
             List<RoleEntity> defaultRoleEntities = roleRepository.findAllByNameIn(defaultRoleTypes);
             UserEntity userEntity = UserEntity.builder()
                     .firstName(request.getFirstName())
                     .lastName(request.getLastName())
-                    .username(request.getEmail())
+                    .username(request.getUsername())
+                    .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .roles(defaultRoleEntities)
                     .createdDate(Instant.now())
@@ -52,9 +73,9 @@ public class UserService {
                     "Registering user: {} {} {}",
                     userEntity.getFirstName(),
                     userEntity.getLastName(),
-                    userEntity.getUsername()
+                    userEntity.getEmail()
             );
-            return userRepository.save(userEntity);
+            return userMapper.toDto(userRepository.save(userEntity));
         } else {
             throw new HttpClientErrorException(HttpStatus.PRECONDITION_FAILED, "User already exists");
         }
@@ -74,15 +95,8 @@ public class UserService {
     }
 
     public UserEntity getUser(String username) {
-        return userRepository.findByUsername(username).orElseThrow();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", username)));
     }
 
-    public User findByUsername(String username) {
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        String.format("User with username %s not found", username))
-                );
-        return userMapper.toDto(user);
-    }
 }
