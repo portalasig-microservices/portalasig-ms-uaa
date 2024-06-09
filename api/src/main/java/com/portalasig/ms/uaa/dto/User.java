@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 public class User {
 
     private String username;
+
+    private String email;
+
     private String firstName;
+
     private String lastName;
 }

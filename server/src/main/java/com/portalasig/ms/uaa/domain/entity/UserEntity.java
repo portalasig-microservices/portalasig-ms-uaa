@@ -37,8 +37,10 @@ public class UserEntity implements UserDetails {
     @Column(name = "user_id")
     private Long id;
 
-    @NotNull
     private String username;
+
+    @NotNull
+    private String email;
 
     @NotNull
     private String password;
