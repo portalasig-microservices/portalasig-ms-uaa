@@ -87,16 +87,6 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName("authorities");
-        authoritiesConverter.setAuthorityPrefix("");
-        JwtAuthenticationConverter converterResponse = new JwtAuthenticationConverter();
-        converterResponse.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converterResponse;
-    }
-
-    @Bean
     JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateKeys();
         JWKSet jwkSet = new JWKSet(rsaKey);
