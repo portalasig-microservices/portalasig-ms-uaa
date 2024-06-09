@@ -42,10 +42,8 @@ import java.util.stream.Collectors;
 @Configuration
 public class SecurityConfiguration {
 
-    public static final String AUTH_ADMIN = "ADMIN";
-    public static final String AUTH_USER = "USER";
     public static final String RSA_ALGORITHM = "RSA";
-    public static final int KEYSIZE = 2048;
+    public static final int KEY_SIZE = 2048;
 
     @Bean
     @Order(1)
@@ -122,7 +120,8 @@ public class SecurityConfiguration {
                         claims.putAll(Map.of(
                                 "owner", "portalasig",
                                 "date_request", LocalDateTime.now().toString(),
-                                "authorities", authorities
+                                "authorities", authorities,
+                                "scopes", context.getRegisteredClient().getScopes()
                         ))
                 );
             }
@@ -133,7 +132,7 @@ public class SecurityConfiguration {
         KeyPair keyPair;
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
-            keyPairGenerator.initialize(KEYSIZE);
+            keyPairGenerator.initialize(KEY_SIZE);
             keyPair = keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("Unable to generate RSA key pair", e);
