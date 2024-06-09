@@ -19,7 +19,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -38,7 +37,7 @@ public class UserService implements UserDetailsService {
 
     private final List<String> defaultRoleTypes = List.of(RoleType.USER.toString());
 
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -97,6 +96,10 @@ public class UserService implements UserDetailsService {
     public UserEntity getUser(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", username)));
+    }
+
+    public User findUserByUsername(String username) {
+        return userMapper.toDto(getUser(username));
     }
 
 }

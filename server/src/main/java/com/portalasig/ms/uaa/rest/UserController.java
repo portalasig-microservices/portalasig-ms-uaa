@@ -1,6 +1,5 @@
 package com.portalasig.ms.uaa.rest;
 
-import com.portalasig.ms.uaa.dto.AuthenticationResponse;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.service.UserService;
@@ -28,6 +27,6 @@ public class UserController {
 
     @GetMapping("/{username}")
     public User findByUsername(@PathVariable String username) {
-        return User.builder().build();
+        return userService.findUserByUsername(username);
     }
 }

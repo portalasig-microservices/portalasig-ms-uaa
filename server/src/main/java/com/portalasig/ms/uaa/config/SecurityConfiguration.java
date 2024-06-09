@@ -64,10 +64,9 @@ public class SecurityConfiguration {
     SecurityFilterChain clientSecurityFilterChain (HttpSecurity http) throws Exception {
         http.formLogin(Customizer.withDefaults());
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/user/**").hasAuthority(AUTH_ADMIN)
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
         );
-        http.oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();
     }
 
