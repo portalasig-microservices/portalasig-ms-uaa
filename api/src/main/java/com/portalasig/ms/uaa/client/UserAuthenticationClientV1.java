@@ -8,13 +8,13 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserAuthenticationClientV1 implements UserAuthenticationClient {
 
-    private final WebClient webClient = WebClient.create();
+    private final WebClient webClient;
     private final String baseUrl;
 
     @Override
-    public Mono<User> findUserByUsername(String username) {
+    public Mono<User> findUserByUsername() {
         return webClient.get()
-            .uri(baseUrl + "/user/{username}", username)
+            .uri(baseUrl + "/api/demo")
             .retrieve()
             .bodyToMono(User.class);
     }

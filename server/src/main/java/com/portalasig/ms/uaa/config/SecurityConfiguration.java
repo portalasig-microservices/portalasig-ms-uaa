@@ -23,8 +23,6 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
@@ -54,6 +52,7 @@ public class SecurityConfiguration {
                 .oidc(Customizer.withDefaults());
         http.exceptionHandling(e ->
                 e.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+
         return http.build();
     }
 
