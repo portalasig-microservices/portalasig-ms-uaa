@@ -5,11 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface UserAuthenticationClient {
 
-    /**
-     * Find user by username
-     *
-     * @param username the username
-     * @return the user object
-     */
-    Mono<User> findUserByUsername(String username);
+    Mono<User> findUserByUsername();
 }
