@@ -5,5 +5,12 @@ import reactor.core.publisher.Mono;
 
 public interface UserAuthenticationClient {
 
-    Mono<User> findUserByUsername();
+    /**
+     * Find user by identity.
+     *
+     * @param identity
+     *         the identity
+     * @return the user wrapped around a Mono object
+     */
+    Mono<User> findUserByIdentity(Long identity);
 }

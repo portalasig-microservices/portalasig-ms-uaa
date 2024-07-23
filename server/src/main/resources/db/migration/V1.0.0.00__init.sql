@@ -6,11 +6,13 @@ CREATE TABLE user
   password     VARCHAR(100) NOT NULL COMMENT 'password',
   first_name   VARCHAR(100) NOT NULL COMMENT 'first name',
   last_name    VARCHAR(100) NOT NULL COMMENT 'last name',
+  identity     BIGINT(9)   NOT NULL COMMENT 'identity number',
   created_date datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
   updated_date timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (user_id),
-  KEY          user_idx1 (username)
-) COMMENT 'Test userEntity table to handle authentication and authorization for the application';
+  UNIQUE KEY user_idx1 (username),
+  UNIQUE KEY user_idx2 (`identity`)
+) COMMENT 'Holds all information related with portalasig users';
 
 CREATE TABLE role
 (
@@ -21,7 +23,7 @@ CREATE TABLE role
   updated_date timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (role_id),
   KEY          role_idx1 (name)
-) COMMENT 'handle access roles for the application';
+) COMMENT 'Handle access roles for the application';
 
 CREATE TABLE user_role
 (
@@ -33,7 +35,7 @@ CREATE TABLE user_role
   PRIMARY KEY (user_role_id),
   KEY          user_role_idx1 (user_id),
   KEY          user_role_idx2 (role_id)
-) COMMENT 'handle userEntity roles for the application';
+) COMMENT 'relationship table between user and roles';
 
 CREATE TABLE client
 (
@@ -42,7 +44,7 @@ CREATE TABLE client
   name                   VARCHAR(100) NOT NULL COMMENT 'client name',
   secret                 VARCHAR(250) NOT NULL COMMENT 'client secret',
   scopes                 VARCHAR(250) NOT NULL COMMENT 'client scope',
-  grant_types             VARCHAR(250) NOT NULL COMMENT 'client grant type',
+  grant_types            VARCHAR(250) NOT NULL COMMENT 'client grant type',
   authentication_methods VARCHAR(250) NOT NULL COMMENT 'client auth methods',
   redirect_uri           VARCHAR(250) NOT NULL COMMENT 'redirect uri for client',
   redirect_uri_logout    VARCHAR(250) NOT NULL COMMENT 'redirect uri logout for client',
@@ -50,5 +52,5 @@ CREATE TABLE client
   updated_date           timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (id),
   KEY                    client_idx1 (name)
-) COMMENT 'Handles clients for the application';
+) COMMENT 'Handles oauth2 clients for the login process';
 );
