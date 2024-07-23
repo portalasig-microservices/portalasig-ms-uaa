@@ -6,36 +6,36 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
-import java.util.Set;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "user_role")
 @Builder
-@Table(name = "role")
-public class RoleEntity extends AbstractAuditEntity {
+public class UserRoleEntity extends AbstractAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
-    private Long id;
+    @Column(name = "user_role_id")
+    private Long userRoleId;
 
-    @NotNull
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
-    private String description;
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private RoleEntity role;
 
-    @OneToMany(mappedBy = "role")
-    @EqualsAndHashCode.Exclude
-    private Set<UserRoleEntity> users;
+    @Transient
+    private boolean shouldBeRemoved;
 }

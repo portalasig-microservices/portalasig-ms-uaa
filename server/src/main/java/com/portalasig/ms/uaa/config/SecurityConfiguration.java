@@ -43,9 +43,32 @@ public class SecurityConfiguration {
     public static final String RSA_ALGORITHM = "RSA";
     public static final int KEY_SIZE = 2048;
 
+    private static KeyPair generateRSA() {
+        KeyPair keyPair;
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
+            keyPairGenerator.initialize(KEY_SIZE);
+            keyPair = keyPairGenerator.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Unable to generate RSA key pair", e);
+        }
+        return keyPair;
+    }
+
+    private static RSAKey generateKeys() {
+        KeyPair keyPair = generateRSA();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+
+        return new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+    }
+
     @Bean
     @Order(1)
-    SecurityFilterChain oAuth2SecurityFilterChain(HttpSecurity http) throws Exception{
+    SecurityFilterChain oAuth2SecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
@@ -58,7 +81,7 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(2)
-    SecurityFilterChain clientSecurityFilterChain (HttpSecurity http) throws Exception {
+    SecurityFilterChain clientSecurityFilterChain(HttpSecurity http) throws Exception {
         http.formLogin(Customizer.withDefaults());
         http.authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
@@ -73,7 +96,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    AuthenticationProvider authenticationProvider(PasswordEncoder encoder, UserService userService){
+    AuthenticationProvider authenticationProvider(PasswordEncoder encoder, UserService userService) {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setPasswordEncoder(encoder);
         authenticationProvider.setUserDetailsService(userService);
@@ -116,28 +139,4 @@ public class SecurityConfiguration {
             }
         };
     }
-
-    private static KeyPair generateRSA() {
-        KeyPair keyPair;
-        try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
-            keyPairGenerator.initialize(KEY_SIZE);
-            keyPair = keyPairGenerator.generateKeyPair();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("Unable to generate RSA key pair", e);
-        }
-        return keyPair;
-    }
-
-    private static RSAKey generateKeys() {
-        KeyPair keyPair = generateRSA();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-
-        return new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-    }
-
 }

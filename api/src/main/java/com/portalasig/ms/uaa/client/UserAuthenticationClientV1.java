@@ -1,5 +1,6 @@
 package com.portalasig.ms.uaa.client;
 
+import com.portalasig.ms.uaa.constant.UserPaths;
 import com.portalasig.ms.uaa.dto.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,10 +13,10 @@ public class UserAuthenticationClientV1 implements UserAuthenticationClient {
     private final String baseUrl;
 
     @Override
-    public Mono<User> findUserByUsername() {
+    public Mono<User> findUserByIdentity(Long identity) {
         return webClient.get()
-            .uri(baseUrl + "/api/demo")
-            .retrieve()
-            .bodyToMono(User.class);
+                .uri(baseUrl + UserPaths.USER_PATH + UserPaths.IDENTITY, identity)
+                .retrieve()
+                .bodyToMono(User.class);
     }
 }
