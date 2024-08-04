@@ -55,7 +55,7 @@ public class AdminUserController {
     @PostMapping("/_import")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public void createUsersFromCsv(
-            @ApiParam(value = "CSV file containing user data", required = true) @RequestParam  MultipartFile file
+            @ApiParam(value = "CSV file containing user data", required = true) @RequestParam MultipartFile file
     ) throws IOException {
         if (!file.isEmpty()) {
             userService.createUsersFromCsv(file.getInputStream());
