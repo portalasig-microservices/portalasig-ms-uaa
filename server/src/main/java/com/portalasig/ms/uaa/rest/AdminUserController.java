@@ -2,6 +2,7 @@ package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.dto.Paginated;
+import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.service.UserService;
 import io.swagger.annotations.Api;
@@ -41,7 +42,7 @@ public class AdminUserController {
         return userService.findAll(pageable);
     }
 
-    @ApiOperation(value = "Delete a user by identity")
+    @ApiOperation(value = "Delete an user by identity number")
     @DeleteMapping(IDENTITY)
     @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteUser(
@@ -54,8 +55,12 @@ public class AdminUserController {
     @PostMapping("/_import")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public void createUsersFromCsv(
-            @ApiParam(value = "CSV file containing user data", required = true) @RequestParam MultipartFile file
+            @ApiParam(value = "CSV file containing user data", required = true) @RequestParam  MultipartFile file
     ) throws IOException {
-        userService.createUsersFromCsv(file.getInputStream());
+        if (!file.isEmpty()) {
+            userService.createUsersFromCsv(file.getInputStream());
+        } else {
+            throw new BadRequestException("File is empty");
+        }
     }
 }

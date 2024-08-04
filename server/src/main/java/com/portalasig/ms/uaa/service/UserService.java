@@ -4,6 +4,10 @@ import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import com.portalasig.ms.commons.rest.dto.Paginated;
+import com.portalasig.ms.commons.rest.exception.BadRequestException;
+import com.portalasig.ms.commons.rest.exception.ConflictException;
+import com.portalasig.ms.commons.rest.exception.NotFoundException;
+import com.portalasig.ms.commons.rest.exception.SystemErrorException;
 import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
@@ -30,7 +34,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,7 +76,7 @@ public class UserService implements UserDetailsService {
                             user.getPassword(),
                             authorities
                     );
-                }).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                }).orElseThrow(() -> new NotFoundException("User not found"));
     }
 
     @Transactional
@@ -105,16 +108,14 @@ public class UserService implements UserDetailsService {
             );
             return userMapper.toDto(userRepository.save(userEntity));
         } else {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "User already exists");
+            throw new ConflictException("User already exists");
         }
     }
 
     @Transactional
     public User updateUser(Long identity, UserRequest request) {
         UserEntity userEntity = userRepository.findByIdentity(identity)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(String.format("User %s not found", identity))
-                );
+                .orElseThrow(() -> new NotFoundException(String.format("User %s not found", identity)));
         setDefaultUserData(request, userEntity);
         userMapper.updateEntity(request, userEntity);
         userRepository.save(userEntity);
@@ -133,7 +134,7 @@ public class UserService implements UserDetailsService {
 
     public User findUserByIdentity(Long identity) {
         UserEntity user = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", identity)));
+                .orElseThrow(() -> new NotFoundException(String.format("User %s not found", identity)));
         return userMapper.toDto(user);
     }
 
@@ -141,7 +142,7 @@ public class UserService implements UserDetailsService {
         Page<UserEntity> users = userRepository.findAll(pageable);
 
         if (users.isEmpty()) {
-            throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "No users found");
+            throw new NotFoundException("No users found");
         }
 
         return Paginated.wrap(users.map(userMapper::toDto));
@@ -150,7 +151,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void deleteUser(Long identity) {
         UserEntity user = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", identity)));
+                .orElseThrow(() -> new NotFoundException(String.format("User %s not found", identity)));
         userRoleRepository.removeAllByIdsIn(user.getUserRoles().stream().map(UserRoleEntity::getUserRoleId).toList());
         user.setUserRoles(null);
         userRepository.delete(user);
@@ -168,7 +169,7 @@ public class UserService implements UserDetailsService {
                     .withType(CsvUser.class)
                     .build()
                     .parse();
-            log.info("Starting import users from csv with user_size={}", csvUsers.size());
+            log.info("Starting users import from csv with user_size={}", csvUsers.size());
             List<UserEntity> userEntities = csvUsers
                     .stream()
                     .map(this::createUserFromCsv)
@@ -177,7 +178,11 @@ public class UserService implements UserDetailsService {
             stopWatch.stop();
             log.info("Import users from csv finished in {}ms", stopWatch.getTotalTimeMillis());
         } catch (CsvValidationException | IOException e) {
-            log.error("Error parsing csv file: {}", e.getMessage());
+            throw new SystemErrorException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Something went wrong while parsing csv file",
+                    e
+            );
         }
     }
 
@@ -191,7 +196,7 @@ public class UserService implements UserDetailsService {
     private void validateHeader(List<String> fileHeader) {
         HashSet<String> fileHeaderSet = new HashSet<>(fileHeader);
         if (!fileHeaderSet.containsAll(inputCsvHeader)) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Invalid csv header");
+            throw new BadRequestException("Invalid csv header");
         }
     }
 }
