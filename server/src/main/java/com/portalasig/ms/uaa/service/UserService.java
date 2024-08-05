@@ -3,10 +3,11 @@ package com.portalasig.ms.uaa.service;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvValidationException;
+import com.portalasig.ms.commons.constants.Authority;
 import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.commons.rest.exception.ConflictException;
-import com.portalasig.ms.commons.rest.exception.NotFoundException;
+import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
 import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
@@ -30,7 +31,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -62,21 +62,18 @@ public class UserService implements UserDetailsService {
 
     private final UserConverter userConverter;
 
-    @Override
-    @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username)
-                .map(user -> {
-                    Set<UserRoleEntity> userRoles = user.getUserRoles();
-                    List<SimpleGrantedAuthority> authorities = userRoles.stream()
-                            .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
-                            .toList();
-                    return new org.springframework.security.core.userdetails.User(
-                            user.getEmail(),
-                            user.getPassword(),
-                            authorities
-                    );
-                }).orElseThrow(() -> new NotFoundException("User not found"));
+    private static Set<String> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
+        Set<String> roles = new HashSet<>();
+        if (studentsOnly) {
+            roles.add(Authority.STUDENT.getCode());
+        }
+        if (professorsOnly) {
+            roles.add(Authority.PROFESSOR.getCode());
+        }
+        if (!studentsOnly && !professorsOnly) {
+            roles.addAll(List.of(Authority.STUDENT.getCode(), Authority.PROFESSOR.getCode()));
+        }
+        return roles;
     }
 
     @Transactional
@@ -112,15 +109,21 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    @Override
     @Transactional
-    public User updateUser(Long identity, UserRequest request) {
-        UserEntity userEntity = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new NotFoundException(String.format("User %s not found", identity)));
-        setDefaultUserData(request, userEntity);
-        userMapper.updateEntity(request, userEntity);
-        userRepository.save(userEntity);
-
-        return userMapper.toDto(userEntity);
+    public UserDetails loadUserByUsername(String username) {
+        return userRepository.findByEmail(username)
+                .map(user -> {
+                    Set<UserRoleEntity> userRoles = user.getUserRoles();
+                    List<SimpleGrantedAuthority> authorities = userRoles.stream()
+                            .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
+                            .toList();
+                    return new org.springframework.security.core.userdetails.User(
+                            user.getEmail(),
+                            user.getPassword(),
+                            authorities
+                    );
+                }).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private void setDefaultUserData(UserRequest request, UserEntity userEntity) {
@@ -132,26 +135,40 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    @Transactional
+    public User updateUser(Long identity, UserRequest request) {
+        UserEntity userEntity = userRepository.findByIdentity(identity)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
+        setDefaultUserData(request, userEntity);
+        userMapper.updateEntity(request, userEntity);
+        userRepository.save(userEntity);
+
+        return userMapper.toDto(userEntity);
+    }
+
     public User findUserByIdentity(Long identity) {
         UserEntity user = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new NotFoundException(String.format("User %s not found", identity)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
         return userMapper.toDto(user);
     }
 
-    public Paginated<User> findAll(Pageable pageable) {
-        Page<UserEntity> users = userRepository.findAll(pageable);
-
+    public Paginated<User> findAll(
+            boolean studentsOnly,
+            boolean professorsOnly,
+            Pageable pageable
+    ) {
+        Set<String> roles = getUserRoles(studentsOnly, professorsOnly);
+        Page<UserEntity> users = userRepository.findAllUsers(roles, pageable);
         if (users.isEmpty()) {
-            throw new NotFoundException("No users found");
+            throw new ResourceNotFoundException("No users found");
         }
-
         return Paginated.wrap(users.map(userMapper::toDto));
     }
 
     @Transactional
     public void deleteUser(Long identity) {
         UserEntity user = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new NotFoundException(String.format("User %s not found", identity)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
         userRoleRepository.removeAllByIdsIn(user.getUserRoles().stream().map(UserRoleEntity::getUserRoleId).toList());
         user.setUserRoles(null);
         userRepository.delete(user);

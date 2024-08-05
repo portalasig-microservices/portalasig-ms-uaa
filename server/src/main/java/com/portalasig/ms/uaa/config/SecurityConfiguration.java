@@ -1,10 +1,16 @@
 package com.portalasig.ms.uaa.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.portalasig.ms.commons.configuration.exception.OAuth2AccessDeniedHandler;
+import com.portalasig.ms.commons.configuration.exception.OAuth2AuthenticationEntryPointHandler;
+import com.portalasig.ms.commons.rest.security.CurrentAuthentication;
 import com.portalasig.ms.uaa.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -24,6 +30,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 import java.security.KeyPair;
@@ -38,10 +45,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Configuration
+@RequiredArgsConstructor
+@Slf4j
 public class SecurityConfiguration {
 
     public static final String RSA_ALGORITHM = "RSA";
     public static final int KEY_SIZE = 2048;
+    private final ObjectMapper objectMapper;
+    private final CurrentAuthentication currentAuthentication;
 
     private static KeyPair generateRSA() {
         KeyPair keyPair;
@@ -70,7 +81,6 @@ public class SecurityConfiguration {
     @Order(1)
     SecurityFilterChain oAuth2SecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
                 .oidc(Customizer.withDefaults());
         http.exceptionHandling(e ->
@@ -83,11 +93,24 @@ public class SecurityConfiguration {
     @Order(2)
     SecurityFilterChain clientSecurityFilterChain(HttpSecurity http) throws Exception {
         http.formLogin(Customizer.withDefaults());
-        http.authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
+        http.oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(Customizer.withDefaults())
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
         );
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        http.exceptionHandling(ex -> {
+            ex.accessDeniedHandler(accessDeniedHandler());
+        });
         return http.build();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new OAuth2AccessDeniedHandler(objectMapper, currentAuthentication);
+    }
+
+    @Bean
+    public OAuth2AuthenticationEntryPointHandler authenticationEntryPointHandler() {
+        return new OAuth2AuthenticationEntryPointHandler(objectMapper);
     }
 
     @Bean

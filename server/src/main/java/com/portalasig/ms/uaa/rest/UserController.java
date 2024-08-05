@@ -1,6 +1,7 @@
 package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.constants.RestConstants;
+import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
@@ -9,12 +10,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.portalasig.ms.uaa.constant.UserPaths.IDENTITY;
@@ -53,5 +57,16 @@ public class UserController {
             @ApiParam(value = "Updated details of the user", required = true) @RequestBody UserRequest user
     ) {
         return userService.updateUser(identity, user);
+    }
+
+    @ApiOperation(value = "Retrieve all users with optional role-based filtering and pagination", response = Paginated.class)
+    @GetMapping()
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'PROFESSOR')")
+    public Paginated<User> findAllUsers(
+            @ApiParam(value = "Filter by students only") @RequestParam(value = "students_only", required = false, defaultValue = "0") boolean studentsOnly,
+            @ApiParam(value = "Filter by professor only") @RequestParam(value = "professors_only", required = false, defaultValue = "0") boolean professorsOnly,
+            @ApiParam(value = "Pagination information", required = true) Pageable pageable
+    ) {
+        return userService.findAll(studentsOnly, professorsOnly, pageable);
     }
 }
