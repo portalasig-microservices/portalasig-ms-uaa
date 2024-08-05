@@ -9,7 +9,6 @@ import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.commons.rest.exception.ConflictException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
-import com.portalasig.ms.commons.rest.security.CurrentAuthentication;
 import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
@@ -62,17 +61,16 @@ public class UserService implements UserDetailsService {
     private final HashSet<String> inputCsvHeader;
 
     private final UserConverter userConverter;
-    private final CurrentAuthentication currentAuthentication;
 
-    private static Set<String> getUserRoles(boolean getStudents, boolean getProfessors) {
+    private static Set<String> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
         Set<String> roles = new HashSet<>();
-        if (getStudents) {
+        if (studentsOnly) {
             roles.add(Authority.STUDENT.getCode());
         }
-        if (getProfessors) {
+        if (professorsOnly) {
             roles.add(Authority.PROFESSOR.getCode());
         }
-        if (!getStudents && !getProfessors) {
+        if (!studentsOnly && !professorsOnly) {
             roles.addAll(List.of(Authority.STUDENT.getCode(), Authority.PROFESSOR.getCode()));
         }
         return roles;
@@ -155,11 +153,11 @@ public class UserService implements UserDetailsService {
     }
 
     public Paginated<User> findAll(
-            boolean getStudents,
-            boolean getProfessors,
+            boolean studentsOnly,
+            boolean professorsOnly,
             Pageable pageable
     ) {
-        Set<String> roles = getUserRoles(getStudents, getProfessors);
+        Set<String> roles = getUserRoles(studentsOnly, professorsOnly);
         Page<UserEntity> users = userRepository.findAllUsers(roles, pageable);
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found");

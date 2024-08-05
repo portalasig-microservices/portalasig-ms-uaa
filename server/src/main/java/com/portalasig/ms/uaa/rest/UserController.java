@@ -61,12 +61,12 @@ public class UserController {
 
     @ApiOperation(value = "Retrieve all users with optional role-based filtering and pagination", response = Paginated.class)
     @GetMapping()
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'STUDENT')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'PROFESSOR')")
     public Paginated<User> findAllUsers(
-            @ApiParam(value = "Filter by students only") @RequestParam(value = "student", required = false, defaultValue = "0") boolean getStudents,
-            @ApiParam(value = "Filter by professor only") @RequestParam(value = "professor", required = false, defaultValue = "0") boolean getProfessors,
+            @ApiParam(value = "Filter by students only") @RequestParam(value = "students_only", required = false, defaultValue = "0") boolean studentsOnly,
+            @ApiParam(value = "Filter by professor only") @RequestParam(value = "professors_only", required = false, defaultValue = "0") boolean professorsOnly,
             @ApiParam(value = "Pagination information", required = true) Pageable pageable
     ) {
-        return userService.findAll(getStudents, getProfessors, pageable);
+        return userService.findAll(studentsOnly, professorsOnly, pageable);
     }
 }
