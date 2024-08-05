@@ -6,7 +6,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.portalasig.ms.commons.configuration.exception.OAuth2AccessDeniedHandler;
-import com.portalasig.ms.commons.configuration.exception.OAuth2AuthenticationEntryPointHandler;
 import com.portalasig.ms.commons.rest.security.CurrentAuthentication;
 import com.portalasig.ms.uaa.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -106,11 +105,6 @@ public class SecurityConfiguration {
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return new OAuth2AccessDeniedHandler(objectMapper, currentAuthentication);
-    }
-
-    @Bean
-    public OAuth2AuthenticationEntryPointHandler authenticationEntryPointHandler() {
-        return new OAuth2AuthenticationEntryPointHandler(objectMapper);
     }
 
     @Bean
