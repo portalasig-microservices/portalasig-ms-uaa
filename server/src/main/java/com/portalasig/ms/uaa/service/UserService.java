@@ -147,6 +147,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User findUserByIdentity(Long identity) {
+        log.info("Find user by identity: {}", identity); // Remove later
         UserEntity user = userRepository.findByIdentity(identity)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
         return userMapper.toDto(user);
