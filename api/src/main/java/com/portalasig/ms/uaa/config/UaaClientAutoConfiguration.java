@@ -23,26 +23,29 @@ public class UaaClientAutoConfiguration {
     @Primary
     @Bean(name = "userAuthenticationClientV1")
     public UserAuthenticationClient getUserAuthenticationClientV1(
-            @Value("${portalasig.uaa.ms.v1.url}") String baseUrl,
-            WebClient webClient) {
+            @Value("${portalasig.uaa.ms.v1.url}") String baseUrl, WebClient webClient) {
         return new UserAuthenticationClientV1(webClient, baseUrl);
     }
 
     @Bean
     ReactiveClientRegistrationRepository clientRegistrations(
-            @Value("${spring.security.oauth2.client.provider.portalasig_engine.token-uri}") String token_uri,
-            @Value("${spring.security.oauth2.client.registration.portalasig_engine.client-id}") String client_id,
-            @Value("${spring.security.oauth2.client.registration.portalasig_engine.client-secret}") String client_secret,
-            @Value("${spring.security.oauth2.client.registration.portalasig_engine.authorization-grant-type}") String authorizationGrantType
+            @Value("${spring.security.oauth2.client.provider.portalasig_engine.token-uri}")
+            String token_uri,
+            @Value("${spring.security.oauth2.client.registration.portalasig_engine.client-id}")
+            String client_id,
+            @Value("${spring.security.oauth2.client.registration.portalasig_engine.client-secret}")
+            String client_secret,
+            @Value(
+                    "${spring.security.oauth2.client.registration.portalasig_engine.authorization-grant-type}")
+            String authorizationGrantType) {
 
-    ) {
-        ClientRegistration registration = ClientRegistration
-                .withRegistrationId("portalasig_engine")
-                .tokenUri(token_uri)
-                .clientId(client_id)
-                .clientSecret(client_secret)
-                .authorizationGrantType(new AuthorizationGrantType(authorizationGrantType))
-                .build();
+        ClientRegistration registration =
+                ClientRegistration.withRegistrationId("portalasig_engine")
+                        .tokenUri(token_uri)
+                        .clientId(client_id)
+                        .clientSecret(client_secret)
+                        .authorizationGrantType(new AuthorizationGrantType(authorizationGrantType))
+                        .build();
         return new InMemoryReactiveClientRegistrationRepository(registration);
     }
 
@@ -61,13 +64,11 @@ public class UaaClientAutoConfiguration {
     }
 
     @Bean("webClient")
-    WebClient webClient(AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager oauth2AuthorizedClientManager) {
+    WebClient webClient(
+            AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager oauth2AuthorizedClientManager) {
         ServerOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServerOAuth2AuthorizedClientExchangeFilterFunction(oauth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("portalasig_engine");
-        return WebClient
-                .builder()
-                .filter(oauth2Client)
-                .build();
+        return WebClient.builder().filter(oauth2Client).build();
     }
 }

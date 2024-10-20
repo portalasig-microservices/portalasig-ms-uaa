@@ -81,14 +81,13 @@ public class UserService implements UserDetailsService {
         if (!userRepository.existsByIdentity(request.getIdentity())) {
             Set<RoleEntity> defaultRoleEntities = roleRepository.findAllByNameIn(defaultRoleTypes);
             UserEntity userEntity = UserEntity.builder().build();
-            Set<UserRoleEntity> userRoleEntities = defaultRoleEntities
-                    .stream()
-                    .map(role -> UserRoleEntity.builder().role(role).user(userEntity).build())
-                    .collect(Collectors.toSet());
+            Set<UserRoleEntity> userRoleEntities = defaultRoleEntities.stream()
+                    .map(role ->
+                            UserRoleEntity.builder().role(role).user(userEntity).build()).collect(Collectors.toSet()
+                    );
 
             userEntity.setFirstName(request.getFirstName());
             userEntity.setLastName(request.getLastName());
-            userEntity.setUsername(request.getUsername());
             userEntity.setIdentity(request.getIdentity());
             userEntity.setEmail(request.getEmail());
             userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -97,12 +96,8 @@ public class UserService implements UserDetailsService {
             userEntity.setCreatedDate(Instant.now());
             userEntity.setUpdatedDate(Instant.now());
 
-            log.info(
-                    "Registering user: {} {} {}",
-                    userEntity.getFirstName(),
-                    userEntity.getLastName(),
-                    userEntity.getEmail()
-            );
+            log.info("Registering user: {} {} {}", userEntity.getFirstName(), userEntity.getLastName(),
+                    userEntity.getEmail());
             return userMapper.toDto(userRepository.save(userEntity));
         } else {
             throw new ConflictException("User already exists");
@@ -112,18 +107,17 @@ public class UserService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) {
-        return userRepository.findByEmail(username)
-                .map(user -> {
-                    Set<UserRoleEntity> userRoles = user.getUserRoles();
-                    List<SimpleGrantedAuthority> authorities = userRoles.stream()
-                            .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
+        return userRepository.findByIdentity(Long.parseLong(username)).map(user -> {
+            Set<UserRoleEntity> userRoles = user.getUserRoles();
+            List<SimpleGrantedAuthority> authorities =
+                    userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
                             .toList();
-                    return new org.springframework.security.core.userdetails.User(
-                            user.getEmail(),
-                            user.getPassword(),
-                            authorities
-                    );
-                }).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            return new org.springframework.security.core.userdetails.User(
+                    user.getEmail(),
+                    user.getPassword(),
+                    authorities
+            );
+        }).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private void setDefaultUserData(UserRequest request, UserEntity userEntity) {
@@ -153,11 +147,7 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(user);
     }
 
-    public Paginated<User> findAll(
-            boolean studentsOnly,
-            boolean professorsOnly,
-            Pageable pageable
-    ) {
+    public Paginated<User> findAll(boolean studentsOnly, boolean professorsOnly, Pageable pageable) {
         Set<String> roles = getUserRoles(studentsOnly, professorsOnly);
         Page<UserEntity> users = userRepository.findAllUsers(roles, pageable);
         if (users.isEmpty()) {
@@ -183,24 +173,15 @@ public class UserService implements UserDetailsService {
             // readNext() method reads the line and skips it from the array
             String[] header = reader.readNext();
             validateHeader(Arrays.asList(header));
-            List<CsvUser> csvUsers = new CsvToBeanBuilder<CsvUser>(reader)
-                    .withType(CsvUser.class)
-                    .build()
-                    .parse();
+            List<CsvUser> csvUsers = new CsvToBeanBuilder<CsvUser>(reader).withType(CsvUser.class).build().parse();
             log.info("Starting users import from csv with user_size={}", csvUsers.size());
-            List<UserEntity> userEntities = csvUsers
-                    .stream()
-                    .map(this::createUserFromCsv)
-                    .toList();
+            List<UserEntity> userEntities = csvUsers.stream().map(this::createUserFromCsv).toList();
             userRepository.saveAll(userEntities);
             stopWatch.stop();
             log.info("Import users from csv finished in {}ms", stopWatch.getTotalTimeMillis());
         } catch (CsvValidationException | IOException e) {
-            throw new SystemErrorException(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Something went wrong while parsing csv file",
-                    e
-            );
+            throw new SystemErrorException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Something went wrong while parsing csv file", e);
         }
     }
 

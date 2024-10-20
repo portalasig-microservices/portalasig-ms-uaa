@@ -7,14 +7,11 @@ import com.portalasig.ms.commons.persistence.Codeable;
 
 public enum RoleType implements Codeable<String> {
 
-    USER("USER"),
-    ADMIN("ADMIN"),
-    STUDENT("STUDENT"),
-    PROFESSOR("PROFESSOR"),
-    INVALID("");
+    USER("USER"), ADMIN("ADMIN"), STUDENT("STUDENT"), PROFESSOR("PROFESSOR"), INVALID("");
 
     private static final CodeToEnumMapper<String, RoleType> CODE_TO_ENUM_MAPPER =
             new CodeToEnumMapper<>(RoleType.class);
+
     final String code;
 
     RoleType(String code) {

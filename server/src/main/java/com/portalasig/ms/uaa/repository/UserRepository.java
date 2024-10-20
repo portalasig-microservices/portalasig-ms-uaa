@@ -12,8 +12,6 @@ import java.util.Set;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    Optional<UserEntity> findByEmail(String username);
-
     boolean existsByIdentity(Long identity);
 
     Optional<UserEntity> findByIdentity(Long identity);
@@ -24,8 +22,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             JOIN user.userRoles userRole
             WHERE userRole.role.name IN :roles
             """)
-    Page<UserEntity> findAllUsers(
-            @Param("roles") Set<String> roles,
-            Pageable pageable
-    );
+    Page<UserEntity> findAllUsers(@Param("roles") Set<String> roles, Pageable pageable);
 }

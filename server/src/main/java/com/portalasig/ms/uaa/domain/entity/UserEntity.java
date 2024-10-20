@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +20,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Set;
@@ -63,10 +63,7 @@ public class UserEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return userRoles
-                .stream()
-                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
-                .toList();
+        return userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName())).toList();
     }
 
     @Override

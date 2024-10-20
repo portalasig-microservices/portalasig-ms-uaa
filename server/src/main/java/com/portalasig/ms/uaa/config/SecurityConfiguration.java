@@ -8,20 +8,25 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.portalasig.ms.commons.configuration.exception.OAuth2AccessDeniedHandler;
 import com.portalasig.ms.commons.rest.security.CurrentAuthentication;
 import com.portalasig.ms.uaa.service.UserService;
+import com.portalasig.ms.uaa.utils.JwtTokenHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
@@ -31,17 +36,18 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Set;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Configuration
 @RequiredArgsConstructor
@@ -70,20 +76,32 @@ public class SecurityConfiguration {
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
 
-        return new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
+        return new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:8080");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        configuration.addExposedHeader("Authorization");
+        configuration.addExposedHeader("Content-Type");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
     @Order(1)
     SecurityFilterChain oAuth2SecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(Customizer.withDefaults());
-        http.exceptionHandling(e ->
-                e.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
+        http.exceptionHandling(
+                e -> e.authenticationEntryPoint(
+                        new LoginUrlAuthenticationEntryPoint("http://localhost:8080/#/ingresar"))
+        );
 
         return http.build();
     }
@@ -91,11 +109,14 @@ public class SecurityConfiguration {
     @Bean
     @Order(2)
     SecurityFilterChain clientSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.formLogin(Customizer.withDefaults());
-        http.oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(Customizer.withDefaults())
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+        http.csrf(AbstractHttpConfigurer::disable);
+        http.cors(Customizer.withDefaults());
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(
+                        "http://localhost:8080/#/ingresar"))
         );
+        http.authorizeHttpRequests(
+                authorize -> authorize.requestMatchers("/v1/auth/**").permitAll().anyRequest().authenticated());
         http.exceptionHandling(ex -> {
             ex.accessDeniedHandler(accessDeniedHandler());
         });
@@ -138,21 +159,32 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+        return new NimbusJwtEncoder(jwkSource);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
     OAuth2TokenCustomizer<JwtEncodingContext> oAuth2TokenCustomizer() {
         return context -> {
             if (context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN)) {
                 Authentication authentication = context.getPrincipal();
-                Set<String> authorities = authentication.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toSet());
-                context.getClaims().claims(claims ->
-                        claims.putAll(Map.of(
-                                "owner", "portalasig",
-                                "date_request", LocalDateTime.now().toString(),
-                                "authorities", authorities,
-                                "scopes", context.getRegisteredClient().getScopes()
-                        ))
-                );
+                Instant now = Instant.now();
+                context.getClaims().subject(
+                                authentication
+                                        .getName())
+                        .issuedAt(now)
+                        .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                        .claims(claims -> claims
+                                .putAll(JwtTokenHelper.createAccessTokenClaims(
+                                        authentication,
+                                        authentication.getName()
+                                )));
             }
         };
     }

@@ -20,4 +20,3 @@ public class UserRequest {
     @ApiModelProperty(notes = "The last name of the user")
     private String lastName;
 }
-

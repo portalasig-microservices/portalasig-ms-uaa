@@ -35,10 +35,8 @@ public class UserConverter {
             roles.add(roleType.getCode());
         }
         Set<RoleEntity> roleEntities = roleRepository.findAllByNameIn(roles);
-        Set<UserRoleEntity> userRoleEntities = roleEntities
-                .stream()
-                .map(role -> UserRoleEntity.builder().role(role).user(user).build())
-                .collect(Collectors.toSet());
+        Set<UserRoleEntity> userRoleEntities = roleEntities.stream()
+                .map(role -> UserRoleEntity.builder().role(role).user(user).build()).collect(Collectors.toSet());
         user.setUserRoles(userRoleEntities);
     }
 

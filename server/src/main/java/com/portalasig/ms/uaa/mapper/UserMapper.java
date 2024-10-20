@@ -23,11 +23,8 @@ import java.util.Set;
 /**
  * Mapper for the entity {@link UserEntity} and its DTO {@link User}.
  */
-@Mapper(
-        imports = {Instant.class},
-        componentModel = MappingConstants.ComponentModel.SPRING,
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(imports = {Instant.class}, componentModel = MappingConstants.ComponentModel.SPRING,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
     List<RoleType> EXCLUDED_ROLES = List.of(RoleType.USER, RoleType.ADMIN);
@@ -59,11 +56,9 @@ public interface UserMapper {
      */
     @Named("fromUserEntityRolesToUserRoles")
     static List<UserRole> fromUserEntityRolesToUserRoles(Set<UserRoleEntity> userRoles) {
-        return userRoles
-                .stream()
+        return userRoles.stream()
                 .filter(userRole -> !EXCLUDED_ROLES.contains(RoleType.fromCode(userRole.getRole().getName())))
-                .map(userRole -> UserRole.fromCode(userRole.getRole().getName()))
-                .toList();
+                .map(userRole -> UserRole.fromCode(userRole.getRole().getName())).toList();
     }
 
     /**
@@ -119,6 +114,6 @@ public interface UserMapper {
      */
     @Mapping(target = "userRoles", ignore = true)
     @Mapping(target = "createdDate", qualifiedByName = "setDateWithDefault")
-    @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
-    UserEntity fromCsvUserToUserEntity(CsvUser user);
+  @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
+  UserEntity fromCsvUserToUserEntity(CsvUser user);
 }
