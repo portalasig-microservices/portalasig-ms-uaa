@@ -13,7 +13,8 @@ public class DataSourceConfiguration {
     private static HikariDataSource createDataSource(String poolName, String url) {
         HikariDataSource dataSource = new HikariDataSource();
         // This is necessary because HikariDataSource does not define a setUrl method,
-        // so @ConfigurationProperties cannot configure it from the "url" configuration property.
+        // so @ConfigurationProperties cannot configure it from the "url" configuration
+        // property.
         dataSource.setJdbcUrl(url);
         dataSource.setPoolName(poolName);
         return dataSource;

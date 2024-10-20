@@ -37,37 +37,27 @@ public class ClientService implements RegisteredClientRepository {
         Optional<ClientEntity> clientOptional = clientRepository.findByClientId(clientId);
 
         return clientOptional.map(client -> {
-            List<AuthorizationGrantType> authorizationGrantTypes = Arrays
-                    .stream(client.getGrantTypes().split(","))
-                    .map(AuthorizationGrantType::new).toList();
-            List<ClientAuthenticationMethod> clientAuthenticationMethods = Arrays
-                    .stream(client.getAuthenticationMethods().split(","))
-                    .map(ClientAuthenticationMethod::new).toList();
+            List<AuthorizationGrantType> authorizationGrantTypes =
+                    Arrays.stream(client.getGrantTypes().split(",")).map(AuthorizationGrantType::new).toList();
+            List<ClientAuthenticationMethod> clientAuthenticationMethods =
+                    Arrays
+                            .stream(client.getAuthenticationMethods().split(","))
+                            .map(ClientAuthenticationMethod::new).toList();
             List<String> scopes = Arrays.stream(client.getScopes().split(",")).toList();
-            return RegisteredClient
-                    .withId(client.getId().toString())
-                    .clientId(client.getClientId())
-                    .clientSecret(client.getSecret())
-                    .clientName(client.getName())
-                    .redirectUri(client.getRedirectUri())
+            return RegisteredClient.withId(client.getId().toString()).clientId(client.getClientId())
+                    .clientSecret(client.getSecret()).clientName(client.getName()).redirectUri(client.getRedirectUri())
                     .postLogoutRedirectUri(client.getRedirectUriLogout())
                     .clientAuthenticationMethod(clientAuthenticationMethods.get(0))
                     .clientAuthenticationMethod(clientAuthenticationMethods.get(1))
                     .clientAuthenticationMethod(clientAuthenticationMethods.get(2))
-                    .scope(scopes.get(0))
-                    .scope(scopes.get(1))
+                    .scope(scopes.get(0)).scope(scopes.get(1))
                     .authorizationGrantType(authorizationGrantTypes.get(0))
                     .authorizationGrantType(authorizationGrantTypes.get(1))
-                    .authorizationGrantType(authorizationGrantTypes.get(2))
-                    .tokenSettings(tokenSettings())
-                    .build();
+                    .authorizationGrantType(authorizationGrantTypes.get(2)).tokenSettings(tokenSettings()).build();
         }).orElseThrow(() -> new BadCredentialsException("Client not found"));
     }
 
     private TokenSettings tokenSettings() {
-        return TokenSettings
-                .builder()
-                .accessTokenTimeToLive(Duration.ofHours(2))
-                .build();
+        return TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(2)).build();
     }
 }
