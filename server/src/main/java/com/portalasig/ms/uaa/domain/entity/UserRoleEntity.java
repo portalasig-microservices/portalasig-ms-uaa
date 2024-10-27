@@ -13,6 +13,7 @@ import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table(name = "user_role")
 @Builder
+@EqualsAndHashCode(callSuper=false)
 public class UserRoleEntity extends AbstractAuditEntity {
 
     @Id

@@ -15,35 +15,35 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "Details about the CSV user")
 public class CsvUser {
 
-    @ApiModelProperty(notes = "The email of the user")
+    @ApiModelProperty(value = "The email of the user")
     @CsvBindByPosition(position = 5)
     private String email;
 
-    @ApiModelProperty(notes = "The first name of the user")
+    @ApiModelProperty(value = "The first name of the user")
     @CsvBindByPosition(position = 3)
     private String firstName;
 
-    @ApiModelProperty(notes = "The last name of the user")
+    @ApiModelProperty(value = "The last name of the user")
     @CsvBindByPosition(position = 4)
     private String lastName;
 
-    @ApiModelProperty(notes = "The unique identity of the user")
+    @ApiModelProperty(value = "The unique identity of the user")
     @CsvBindByPosition(position = 1)
     private Long identity;
 
-    @ApiModelProperty(notes = "The role of the user")
+    @ApiModelProperty(value = "The role of the user")
     @CsvBindByPosition(position = 10)
     private String role;
 
-    @ApiModelProperty(notes = "The date when the user was created")
+    @ApiModelProperty(value = "The date when the user was created")
     @CsvBindByPosition(position = 8)
     private String createdDate;
 
-    @ApiModelProperty(notes = "The date when the user was last updated")
+    @ApiModelProperty(value = "The date when the user was last updated")
     @CsvBindByPosition(position = 9)
     private String updatedDate;
 
-    @ApiModelProperty(notes = "Indicates whether the user is active")
+    @ApiModelProperty(value = "Indicates whether the user is active")
     @CsvBindByPosition(position = 7)
     private boolean active;
 }

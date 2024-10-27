@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,24 +16,25 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "Details about the registration request")
 public class RegisterRequest {
 
-    @ApiModelProperty(notes = "The email of the user", required = true)
+    @ApiModelProperty(value = "The email of the user", required = true)
     @NotNull
     private String email;
 
-    @ApiModelProperty(notes = "The unique identity of the user", required = true)
+    @ApiModelProperty(value = "The unique identity of the user", required = true)
     @NotNull
     private Long identity;
 
-    @ApiModelProperty(notes = "The password of the user", required = true)
+    @ApiModelProperty(value = "The password of the user", required = true)
     @NotNull
     private String password;
 
-    @ApiModelProperty(notes = "The first name of the user")
+    @ApiModelProperty(value = "The first name of the user")
     private String firstName;
 
-    @ApiModelProperty(notes = "The last name of the user")
+    @ApiModelProperty(value = "The last name of the user")
     private String lastName;
 
-    @ApiModelProperty(notes = "The username of the user")
+    @ApiModelProperty(value = "The username of the user")
     private String username;
+
 }

@@ -23,6 +23,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @Table(name = "role")
+@EqualsAndHashCode(callSuper=false)
 public class RoleEntity extends AbstractAuditEntity {
 
     @Id
