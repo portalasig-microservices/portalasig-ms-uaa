@@ -1,5 +1,6 @@
 package com.portalasig.ms.uaa.dto;
 
+import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.UserRole;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -17,21 +18,27 @@ import java.util.List;
 @ApiModel(description = "Details about the user")
 public class User {
 
-    @ApiModelProperty(notes = "The username of the user")
+    @ApiModelProperty(value = "The unique identifier of the user")
+    private Long userId;
+
+    @ApiModelProperty(value = "The username of the user")
     private String username;
 
-    @ApiModelProperty(notes = "The email of the user")
+    @ApiModelProperty(value = "The email of the user")
     private String email;
 
-    @ApiModelProperty(notes = "The first name of the user")
+    @ApiModelProperty(value = "The first name of the user")
     private String firstName;
 
-    @ApiModelProperty(notes = "The last name of the user")
+    @ApiModelProperty(value = "The last name of the user")
     private String lastName;
 
-    @ApiModelProperty(notes = "The unique identity of the user")
+    @ApiModelProperty(value = "The unique identity of the user")
     private Long identity;
 
-    @ApiModelProperty(notes = "The roles assigned to the user")
+    @ApiModelProperty(value = "The roles assigned to the user")
     private List<UserRole> roles;
+
+    @ApiModelProperty(value = "Which emails users desired to receive", example = "EVENT, EVALUATION, ASSIGNMENT")
+    private List<EmailSetting> emailSettings;
 }

@@ -35,7 +35,7 @@ public class UserEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long id;
+    private Long userId;
 
     private String username;
 
@@ -50,6 +50,8 @@ public class UserEntity implements UserDetails {
     private String lastName;
 
     private Long identity;
+
+    private String emailSettings;
 
     @CreatedDate
     private Instant createdDate;

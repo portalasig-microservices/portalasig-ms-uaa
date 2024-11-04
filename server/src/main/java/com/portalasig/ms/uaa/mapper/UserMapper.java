@@ -1,5 +1,6 @@
 package com.portalasig.ms.uaa.mapper;
 
+import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
@@ -10,13 +11,13 @@ import com.portalasig.ms.uaa.dto.UserRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ import java.util.Set;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
-    List<RoleType> EXCLUDED_ROLES = List.of(RoleType.USER, RoleType.ADMIN);
+    List<RoleType> EXCLUDED_ROLES = List.of(RoleType.USER);
 
     /**
      * Sets the date with a default value if the provided date string is null.
@@ -62,28 +63,6 @@ public interface UserMapper {
     }
 
     /**
-     * Updates an existing {@link UserEntity} with data from a {@link UserRequest}, preserving existing values if not
-     * provided.
-     *
-     * @param request
-     *         the request containing updated data
-     * @param userEntity
-     *         the entity to be updated
-     */
-    static void updateEntityWithRequestData(UserRequest request, @MappingTarget UserEntity userEntity) {
-        if (request.getFirstName() != null) {
-            userEntity.setFirstName(request.getFirstName());
-        } else {
-            request.setFirstName(userEntity.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            userEntity.setLastName(request.getLastName());
-        } else {
-            request.setLastName(userEntity.getLastName());
-        }
-    }
-
-    /**
      * Converts a {@link UserEntity} to a {@link User} DTO.
      *
      * @param userEntity
@@ -91,6 +70,7 @@ public interface UserMapper {
      * @return the converted user DTO
      */
     @Mapping(source = "userRoles", target = "roles", qualifiedByName = "fromUserEntityRolesToUserRoles")
+    @Mapping(source = "emailSettings", target = "emailSettings", qualifiedByName = "decodeEmailSettingsFromString")
     User toDto(UserEntity userEntity);
 
     /**
@@ -98,11 +78,32 @@ public interface UserMapper {
      *
      * @param request
      *         the request containing updated data
-     * @param existingEntity
+     * @param entity
      *         the entity to be updated
      */
-    default void updateEntity(UserRequest request, UserEntity existingEntity) {
-        updateEntityWithRequestData(request, existingEntity);
+    default void updateEntity(UserRequest request, UserEntity entity) {
+        if (request.getFirstName() != null) {
+            entity.setFirstName(request.getFirstName());
+        } else {
+            request.setFirstName(entity.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            entity.setLastName(request.getLastName());
+        } else {
+            request.setLastName(entity.getLastName());
+        }
+
+        if (request.getEmailSettings() != null) {
+            String emailSettings = request
+                    .getEmailSettings()
+                    .stream()
+                    .map(EmailSetting::getCode)
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+            entity.setEmailSettings(emailSettings);
+        } else {
+            request.setLastName(entity.getLastName());
+        }
     }
 
     /**
@@ -114,6 +115,14 @@ public interface UserMapper {
      */
     @Mapping(target = "userRoles", ignore = true)
     @Mapping(target = "createdDate", qualifiedByName = "setDateWithDefault")
-  @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
-  UserEntity fromCsvUserToUserEntity(CsvUser user);
+    @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
+    UserEntity fromCsvUserToUserEntity(CsvUser user);
+
+    @Named("decodeEmailSettingsFromString")
+    default List<EmailSetting> decodeEmailSettingsFromString(String emailSettings) {
+        return Arrays
+                .stream(emailSettings.split(","))
+                .map(EmailSetting::fromCode)
+                .toList();
+    }
 }

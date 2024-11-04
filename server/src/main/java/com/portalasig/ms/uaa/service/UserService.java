@@ -9,6 +9,7 @@ import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.commons.rest.exception.ConflictException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
+import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
@@ -93,11 +94,16 @@ public class UserService implements UserDetailsService {
             userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
             userEntity.setUsername(request.getUsername() == null ? request.getEmail() : request.getUsername());
             userEntity.setUserRoles(userRoleEntities);
+            userEntity.setEmailSettings(EmailSetting.defaultEmailSettings());
             userEntity.setCreatedDate(Instant.now());
             userEntity.setUpdatedDate(Instant.now());
 
-            log.info("Registering user: {} {} {}", userEntity.getFirstName(), userEntity.getLastName(),
-                    userEntity.getEmail());
+            log.info(
+                    "Registering user: {} {} {}",
+                    userEntity.getFirstName(),
+                    userEntity.getLastName(),
+                    userEntity.getEmail()
+            );
             return userMapper.toDto(userRepository.save(userEntity));
         } else {
             throw new ConflictException("User already exists");
@@ -127,6 +133,12 @@ public class UserService implements UserDetailsService {
         if (request.getLastName() == null) {
             request.setLastName(userEntity.getLastName());
         }
+        if (request.getEmailSettings() == null) {
+            request.setEmailSettings(Arrays
+                    .stream(userEntity.getEmailSettings().split(","))
+                    .map(EmailSetting::fromCode)
+                    .toList());
+        }
     }
 
     @Transactional
@@ -141,7 +153,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User findUserByIdentity(Long identity) {
-        log.info("Find user by identity: {}", identity); // Remove later
+        log.debug("Find user by identity: {}", identity);
         UserEntity user = userRepository.findByIdentity(identity)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
         return userMapper.toDto(user);
