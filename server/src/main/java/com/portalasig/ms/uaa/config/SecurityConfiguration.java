@@ -97,6 +97,8 @@ public class SecurityConfiguration {
     @Order(1)
     SecurityFilterChain oAuth2SecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        http.csrf(AbstractHttpConfigurer::disable);
+        http.cors(Customizer.withDefaults());
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
         http.exceptionHandling(
                 e -> e.authenticationEntryPoint(
@@ -117,9 +119,7 @@ public class SecurityConfiguration {
         );
         http.authorizeHttpRequests(
                 authorize -> authorize.requestMatchers("/v1/auth/**").permitAll().anyRequest().authenticated());
-        http.exceptionHandling(ex -> {
-            ex.accessDeniedHandler(accessDeniedHandler());
-        });
+        http.exceptionHandling(ex -> ex.accessDeniedHandler(accessDeniedHandler()));
         return http.build();
     }
 

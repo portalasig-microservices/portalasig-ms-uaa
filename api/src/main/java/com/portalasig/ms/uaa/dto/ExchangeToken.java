@@ -25,6 +25,9 @@ public class ExchangeToken {
     @ApiModelProperty(value = "When was this token issued")
     private Instant issuedAt;
 
+    @ApiModelProperty(value = "Token duration in milliseconds")
+    private long expiresIn;
+
     @ApiModelProperty(value = "Client identifier")
     private String clientId;
 
