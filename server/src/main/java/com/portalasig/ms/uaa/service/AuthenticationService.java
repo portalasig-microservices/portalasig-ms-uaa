@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Service responsible for managing user authentication and token generation. It handles login, access token creation,
@@ -57,6 +58,7 @@ public class AuthenticationService {
                     .accessToken(accessToken.getTokenValue())
                     .refreshToken(refreshToken.getTokenValue())
                     .issuedAt(Instant.now()).clientId(accessToken.getClaim("client_id"))
+                    .expiresIn(ChronoUnit.HOURS.getDuration().toSeconds())
                     .username(request.getUsername())
                     .build();
         } catch (AuthenticationException e) {
@@ -90,6 +92,7 @@ public class AuthenticationService {
                     .accessToken(accessToken.getTokenValue())
                     .refreshToken(request.getRefreshToken())
                     .issuedAt(Instant.now()).clientId(accessToken.getClaim("client_id"))
+                    .expiresIn(ChronoUnit.HOURS.getDuration().toSeconds())
                     .username(decodedJwt.getClaim("username")).build();
         } catch (JwtException e) {
             throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid refresh token");

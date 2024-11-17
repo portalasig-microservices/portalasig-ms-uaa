@@ -12,8 +12,10 @@ public final class JwtTokenHelper {
     }
 
     public static Map<String, ?> createAccessTokenClaims(Jwt decodedJwt) {
-        return Map.of("authorities", decodedJwt.getClaim("authorities"), "user_identity",
-                decodedJwt.getClaim("user_identity"));
+        return Map.of(
+                "authorities", decodedJwt.getClaim("authorities"),
+                "username", decodedJwt.getClaim("username")
+        );
     }
 
     public static Map<String, ?> createAccessTokenClaims(Authentication authentication, String username) {
