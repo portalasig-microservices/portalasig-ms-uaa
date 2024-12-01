@@ -1,0 +1,29 @@
+name: Build and Verify Services
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Clone and build portalasig-commons
+        run: |
+          git clone --branch master https://github.com/portalasig-microservices/portalasig-commons.git
+          cd portalasig-commons
+          mvn clean install
+
+      - name: Build and verify service
+        run: mvn clean verify
