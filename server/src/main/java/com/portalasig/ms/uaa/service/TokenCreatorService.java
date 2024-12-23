@@ -40,7 +40,7 @@ public final class TokenCreatorService {
         return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, tokenClaims));
     }
 
-    public Jwt createRefreshToken(Authentication authentication) {
+    public Jwt createRefreshToken(Authentication authentication, String username) {
         Instant now = Instant.now();
         JwtClaimsSet tokenClaims =
                 JwtClaimsSet.builder().subject(authentication.getName()).issuedAt(now)
@@ -48,7 +48,7 @@ public final class TokenCreatorService {
                         .claims(claims -> claims
                                 .putAll(JwtTokenHelper.createAccessTokenClaims(
                                         authentication,
-                                        authentication.getName()
+                                        username
                                 )))
                         .build();
         JwsHeader jwsHeader = JwsHeader.with(SignatureAlgorithm.RS256).build();

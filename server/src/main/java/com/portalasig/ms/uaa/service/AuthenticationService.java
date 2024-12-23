@@ -51,7 +51,7 @@ public class AuthenticationService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             Jwt accessToken = tokenCreatorService.createAccessToken(authentication, request.getUsername());
-            Jwt refreshToken = tokenCreatorService.createRefreshToken(authentication);
+            Jwt refreshToken = tokenCreatorService.createRefreshToken(authentication, request.getUsername());
 
             return ExchangeToken
                     .builder()
