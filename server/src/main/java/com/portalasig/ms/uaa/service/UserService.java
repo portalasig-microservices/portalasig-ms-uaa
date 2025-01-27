@@ -63,6 +63,9 @@ public class UserService implements UserDetailsService {
 
     private final UserConverter userConverter;
 
+    @Value("${ms.uaa.tools.users.default-user}")
+    private final String defaultUser;
+
     private static Set<String> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
         Set<String> roles = new HashSet<>();
         if (studentsOnly) {
@@ -187,20 +190,26 @@ public class UserService implements UserDetailsService {
             validateHeader(Arrays.asList(header));
             List<CsvUser> csvUsers = new CsvToBeanBuilder<CsvUser>(reader).withType(CsvUser.class).build().parse();
             log.info("Starting users import from csv with user_size={}", csvUsers.size());
-            List<UserEntity> userEntities = csvUsers.stream().map(this::createUserFromCsv).toList();
+            List<RoleEntity> roleEntities = roleRepository.findAll();
+            String defaultPassword = passwordEncoder.encode(defaultUser);
+            List<UserEntity> userEntities = csvUsers
+                    .stream()
+                    .map(csvUser -> createUserFromCsv(csvUser, roleEntities, defaultPassword))
+                    .toList();
             userRepository.saveAll(userEntities);
             stopWatch.stop();
             log.info("Import users from csv finished in {}ms", stopWatch.getTotalTimeMillis());
         } catch (CsvValidationException | IOException e) {
-            throw new SystemErrorException(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            throw new SystemErrorException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Something went wrong while parsing csv file", e);
         }
     }
 
-    public UserEntity createUserFromCsv(CsvUser csvUser) {
+    public UserEntity createUserFromCsv(CsvUser csvUser, List<RoleEntity> roleEntities, String defaultPassword) {
         UserEntity user = userMapper.fromCsvUserToUserEntity(csvUser);
-        userConverter.setCsvUserRoleOrDefault(user, csvUser);
-        userConverter.setUserInformation(user);
+        userConverter.setCsvUserRoleOrDefault(user, csvUser, roleEntities);
+        userConverter.setUserInformation(user, csvUser, defaultPassword);
         return user;
     }
 

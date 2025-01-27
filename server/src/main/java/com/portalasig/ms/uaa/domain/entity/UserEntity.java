@@ -51,6 +51,7 @@ public class UserEntity implements UserDetails {
 
     private Long identity;
 
+    @NotNull
     private String emailSettings;
 
     @CreatedDate

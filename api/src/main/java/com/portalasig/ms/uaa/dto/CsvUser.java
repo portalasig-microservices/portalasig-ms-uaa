@@ -19,6 +19,10 @@ public class CsvUser {
     @CsvBindByPosition(position = 5)
     private String email;
 
+    @ApiModelProperty(value = "The encoded password of the user")
+    @CsvBindByPosition(position = 2)
+    private String password;
+
     @ApiModelProperty(value = "The first name of the user")
     @CsvBindByPosition(position = 3)
     private String firstName;
@@ -46,4 +50,8 @@ public class CsvUser {
     @ApiModelProperty(value = "Indicates whether the user is active")
     @CsvBindByPosition(position = 7)
     private boolean active;
+
+    @ApiModelProperty(value = "Email settings of the user as an integer-expressed bitmask")
+    @CsvBindByPosition(position = 11)
+    private Integer emailSettings;
 }
