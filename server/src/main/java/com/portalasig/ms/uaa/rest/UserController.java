@@ -70,10 +70,10 @@ public class UserController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'PROFESSOR')")
     public Paginated<User> findAllUsers(
             @ApiParam(value = "Filter by students only")
-            @RequestParam(value = "students_only", required = false, defaultValue = "0") boolean studentsOnly,
+            @RequestParam(value = "students_only", required = false, defaultValue = "false") boolean studentsOnly,
             @ApiParam(
                     value = "Filter by professor only")
-            @RequestParam(value = "professors_only", required = false, defaultValue = "0") boolean professorsOnly,
+            @RequestParam(value = "professors_only", required = false, defaultValue = "false") boolean professorsOnly,
             @ApiParam(
                     value = "Pagination information", required = true) Pageable pageable) {
         return userService.findAll(studentsOnly, professorsOnly, pageable);
