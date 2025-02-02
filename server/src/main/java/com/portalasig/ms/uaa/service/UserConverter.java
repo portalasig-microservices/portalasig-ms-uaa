@@ -2,6 +2,7 @@ package com.portalasig.ms.uaa.service;
 
 import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RoleType;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
 import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,5 +60,42 @@ public class UserConverter {
             }
         }
         return String.join(",", activeFeatures);
+    }
+
+    public void setUserRoles(UserRole userRole, List<RoleEntity> roleEntities, UserEntity userEntity) {
+        List<UserRole> incomingUserRoles = new ArrayList<>();
+
+        if (userRole.isAllowed()) {
+            incomingUserRoles.add(userRole);
+        } else {
+            incomingUserRoles.add(UserRole.STUDENT);
+        }
+
+        if (userEntity.getUserRoles() == null) {
+            userEntity.setUserRoles(new HashSet<>());
+        }
+
+        Set<UserRoleEntity> userRoleEntities = roleEntities.stream()
+                .filter(roleEntity ->
+                        incomingUserRoles.contains(UserRole.fromCode(roleEntity.getName())) ||
+                                roleEntity.getName().equals(RoleType.USER.name())
+                )
+                .map(role ->
+                        UserRoleEntity.builder().role(role).user(userEntity).build()).collect(Collectors.toSet()
+                );
+
+        List<String> userRoleNames = userRoleEntities
+                .stream()
+                .map(userRoleEntity -> userRoleEntity.getRole().getName())
+                .toList();
+
+        userEntity.getUserRoles().forEach(userRoleEntity -> {
+            if (!userRoleNames.contains(userRoleEntity.getRole().getName())) {
+                userRoleEntity.setShouldBeRemoved(true);
+            }
+        });
+
+        userEntity.getUserRoles().removeIf(UserRoleEntity::isShouldBeRemoved);
+        userEntity.getUserRoles().addAll(userRoleEntities);
     }
 }

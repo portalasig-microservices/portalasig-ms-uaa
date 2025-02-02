@@ -11,6 +11,7 @@ import com.portalasig.ms.uaa.dto.UserRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
@@ -29,6 +30,67 @@ import java.util.Set;
 public interface UserMapper {
 
     List<RoleType> EXCLUDED_ROLES = List.of(RoleType.USER);
+
+    /**
+     * Converts a {@link UserRequest} to a {@link UserEntity}.
+     *
+     * @param request
+     *         the user request to convert
+     * @return the converted user entity
+     */
+    @Mapping(target = "userRoles", ignore = true)
+    UserEntity toEntity(UserRequest request);
+
+    /**
+     * Converts a {@link UserRequest} to an existing {@link UserEntity}.
+     *
+     * @param userEntity
+     *         the existing user entity to update
+     * @param userRequest
+     *         the user request to convert
+     * @return the updated user entity
+     */
+    @Mapping(target = "userRoles", ignore = true)
+    UserEntity toEntityFromExisting(@MappingTarget UserEntity userEntity, UserRequest userRequest);
+
+    /**
+     * Converts a {@link UserEntity} to a {@link User} DTO.
+     *
+     * @param userEntity
+     *         the user entity to convert
+     * @return the converted user DTO
+     */
+    @Mapping(source = "userRoles", target = "roles", qualifiedByName = "fromUserEntityRolesToUserRoles")
+    @Mapping(source = "emailSettings", target = "emailSettings", qualifiedByName = "decodeEmailSettingsFromString")
+    User toDto(UserEntity userEntity);
+
+
+    /**
+     * Converts a {@link CsvUser} to a {@link UserEntity}.
+     *
+     * @param user
+     *         the CSV user to convert
+     * @return the converted user entity
+     */
+    @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "createdDate", qualifiedByName = "setDateWithDefault")
+    @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
+    UserEntity fromCsvUserToUserEntity(CsvUser user);
+
+    /**
+     * Decodes the email settings from a string to a list of {@link EmailSetting}.
+     *
+     * @param emailSettings
+     *         the email settings string to decode
+     * @return the list of email settings
+     */
+    @Named("decodeEmailSettingsFromString")
+    default List<EmailSetting> decodeEmailSettingsFromString(String emailSettings) {
+        return Arrays
+                .stream(emailSettings.split(","))
+                .map(EmailSetting::fromCode)
+                .toList();
+    }
 
     /**
      * Sets the date with a default value if the provided date string is null.
@@ -62,67 +124,4 @@ public interface UserMapper {
                 .map(userRole -> UserRole.fromCode(userRole.getRole().getName())).toList();
     }
 
-    /**
-     * Converts a {@link UserEntity} to a {@link User} DTO.
-     *
-     * @param userEntity
-     *         the user entity to convert
-     * @return the converted user DTO
-     */
-    @Mapping(source = "userRoles", target = "roles", qualifiedByName = "fromUserEntityRolesToUserRoles")
-    @Mapping(source = "emailSettings", target = "emailSettings", qualifiedByName = "decodeEmailSettingsFromString")
-    User toDto(UserEntity userEntity);
-
-    /**
-     * Updates an existing {@link UserEntity} with data from a {@link UserRequest}.
-     *
-     * @param request
-     *         the request containing updated data
-     * @param entity
-     *         the entity to be updated
-     */
-    default void updateEntity(UserRequest request, UserEntity entity) {
-        if (request.getFirstName() != null) {
-            entity.setFirstName(request.getFirstName());
-        } else {
-            request.setFirstName(entity.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            entity.setLastName(request.getLastName());
-        } else {
-            request.setLastName(entity.getLastName());
-        }
-
-        if (request.getEmailSettings() != null) {
-            String emailSettings = request
-                    .getEmailSettings()
-                    .stream()
-                    .map(EmailSetting::getCode)
-                    .reduce((a, b) -> a + "," + b)
-                    .orElse("");
-            entity.setEmailSettings(emailSettings);
-        } else {
-            request.setLastName(entity.getLastName());
-        }
-    }
-
-    /**
-     * Converts a {@link CsvUser} to a {@link UserEntity}.
-     *
-     * @param user
-     *         the CSV user to convert
-     * @return the converted user entity
-     */
-    @Mapping(target = "userRoles", ignore = true)
-    @Mapping(target = "createdDate", qualifiedByName = "setDateWithDefault")
-    @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
-    UserEntity fromCsvUserToUserEntity(CsvUser user);
-
-    @Named("decodeEmailSettingsFromString")
-    default List<EmailSetting> decodeEmailSettingsFromString(String emailSettings) {
-        return Arrays
-                .stream(emailSettings.split(","))
-                .map(EmailSetting::fromCode)
-                .toList();
-    }
 }
