@@ -29,4 +29,8 @@ public enum UserRole implements Codeable<String> {
     public String getCode() {
         return code;
     }
+
+    public boolean isAllowed() {
+        return this != INVALID && this != ADMIN;
+    }
 }

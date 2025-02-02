@@ -43,6 +43,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,6 +66,9 @@ public class UserService implements UserDetailsService {
 
     @Value("${ms.uaa.tools.users.default-user}")
     private final String defaultUser;
+
+    @Value("${ms.uaa.tools.users.default-password}")
+    private final String defaultPassword;
 
     private static Set<String> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
         Set<String> roles = new HashSet<>();
@@ -127,32 +131,6 @@ public class UserService implements UserDetailsService {
                     authorities
             );
         }).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
-    private void setDefaultUserData(UserRequest request, UserEntity userEntity) {
-        if (request.getFirstName() == null) {
-            request.setFirstName(userEntity.getFirstName());
-        }
-        if (request.getLastName() == null) {
-            request.setLastName(userEntity.getLastName());
-        }
-        if (request.getEmailSettings() == null) {
-            request.setEmailSettings(Arrays
-                    .stream(userEntity.getEmailSettings().split(","))
-                    .map(EmailSetting::fromCode)
-                    .toList());
-        }
-    }
-
-    @Transactional
-    public User updateUser(Long identity, UserRequest request) {
-        UserEntity userEntity = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
-        setDefaultUserData(request, userEntity);
-        userMapper.updateEntity(request, userEntity);
-        userRepository.save(userEntity);
-
-        return userMapper.toDto(userEntity);
     }
 
     public User findUserByIdentity(Long identity) {
@@ -219,4 +197,25 @@ public class UserService implements UserDetailsService {
             throw new BadRequestException("Invalid csv header");
         }
     }
+
+    public User upsertUser(UserRequest userRequest) {
+        UserEntity userEntity;
+        Optional<UserEntity> existingUser = userRepository.findByIdentity(userRequest.getIdentity());
+        if (existingUser.isEmpty()) {
+            userEntity = userMapper.toEntity(userRequest);
+            userEntity.setEmailSettings(EmailSetting.defaultEmailSettings());
+            userEntity.setPassword(passwordEncoder.encode(defaultPassword));
+            userEntity.setUsername(userRequest.getEmail());
+        } else {
+            userEntity = userMapper.toEntityFromExisting(existingUser.get(), userRequest);
+        }
+        List<RoleEntity> roleEntities = roleRepository.findAll();
+        userConverter.setUserRoles(userRequest.getUserRole(), roleEntities, userEntity);
+        userEntity.setCreatedDate(Instant.now());
+        userEntity.setUpdatedDate(Instant.now());
+        userEntity = userRepository.save(userEntity);
+        log.info("Upserted user_id={}", userEntity.getIdentity());
+        return userMapper.toDto(userEntity);
+    }
+
 }

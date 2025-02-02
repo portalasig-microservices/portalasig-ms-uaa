@@ -5,7 +5,6 @@ import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.uaa.constant.RestPaths;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
-import com.portalasig.ms.uaa.dto.UserRequest;
 import com.portalasig.ms.uaa.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -18,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,17 +48,6 @@ public class UserController {
             @ApiParam(value = "Identity of the user to be fetched", required = true)
             @PathVariable Long identity) {
         return userService.findUserByIdentity(identity);
-    }
-
-    @ApiOperation(value = "Update an existing user", response = User.class)
-    @ApiResponses({@ApiResponse(code = 200, message = "User updated successfully"),
-            @ApiResponse(code = 400, message = "Invalid user details")})
-    @PutMapping(RestPaths.User.IDENTITY)
-    public User updateUser(
-            @ApiParam(value = "Identity of the user to be updated", required = true)
-            @PathVariable Long identity, @ApiParam(value = "Updated details of the user", required = true)
-    @RequestBody UserRequest user) {
-        return userService.updateUser(identity, user);
     }
 
     @ApiOperation(value = "Retrieve all users with optional role-based filtering and pagination",

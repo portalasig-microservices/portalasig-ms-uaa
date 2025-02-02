@@ -3,17 +3,22 @@ package com.portalasig.ms.uaa.rest;
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.uaa.constant.RestPaths;
+import com.portalasig.ms.uaa.dto.User;
+import com.portalasig.ms.uaa.dto.UserRequest;
 import com.portalasig.ms.uaa.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +30,7 @@ import java.io.IOException;
 @RequestMapping(RestConstants.VERSION_ONE + RestPaths.User.USER)
 @RequiredArgsConstructor
 @Api(value = "Admin User Management Controller", tags = "Admin User Management")
+@Slf4j
 public class AdminUserController {
 
     private final UserService userService;
@@ -53,5 +59,21 @@ public class AdminUserController {
         } else {
             throw new BadRequestException("File is empty");
         }
+    }
+
+    @ApiOperation(value = "Admin upsert user")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 200, message = "User upserted successfully"),
+                    @ApiResponse(code = 400, message = "Bad request"),
+                    @ApiResponse(code = 500, message = "Internal server error")
+            }
+    )
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PostMapping()
+    public User upsertUser(
+            @Valid @RequestBody UserRequest userRequest) {
+        log.info("Upserting user: {}", userRequest.getIdentity());
+        return userService.upsertUser(userRequest);
     }
 }
