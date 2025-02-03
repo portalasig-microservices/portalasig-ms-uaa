@@ -16,5 +16,6 @@ public class RestPaths {
 
     public static class Admin {
         public static final String IMPORT_USERS = "/_import";
+        public static final String EDIT_PASSWORD = "/edit-password";
     }
 }

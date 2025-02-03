@@ -17,6 +17,7 @@ import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.CsvUser;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
+import com.portalasig.ms.uaa.dto.UserEditPasswordRequest;
 import com.portalasig.ms.uaa.dto.UserRequest;
 import com.portalasig.ms.uaa.mapper.UserMapper;
 import com.portalasig.ms.uaa.repository.RoleRepository;
@@ -218,4 +219,12 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(userEntity);
     }
 
+    public void changeUserPassword(Long identity, UserEditPasswordRequest request) {
+        UserEntity existingUser = userRepository.findByIdentity(identity).orElseThrow(
+                () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
+        );
+        existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(existingUser);
+        log.info("Password successfully edited for user_id={}", identity);
+    }
 }
