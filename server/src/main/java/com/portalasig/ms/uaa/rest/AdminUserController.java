@@ -4,6 +4,7 @@ import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.uaa.constant.RestPaths;
 import com.portalasig.ms.uaa.dto.User;
+import com.portalasig.ms.uaa.dto.UserEditPasswordRequest;
 import com.portalasig.ms.uaa.dto.UserRequest;
 import com.portalasig.ms.uaa.service.UserService;
 import io.swagger.annotations.Api;
@@ -69,11 +70,28 @@ public class AdminUserController {
                     @ApiResponse(code = 500, message = "Internal server error")
             }
     )
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping()
     public User upsertUser(
             @Valid @RequestBody UserRequest userRequest) {
         log.info("Upserting user: {}", userRequest.getIdentity());
         return userService.upsertUser(userRequest);
+    }
+
+    @ApiOperation(value = "Admin change user password")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(code = 200, message = "User password edited successfully"),
+                    @ApiResponse(code = 400, message = "Bad request"),
+                    @ApiResponse(code = 500, message = "Internal server error")
+            }
+    )
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping(RestPaths.User.IDENTITY + RestPaths.Admin.EDIT_PASSWORD)
+    public void changeUserPassword (
+            @PathVariable Long identity,
+            @Valid @RequestBody UserEditPasswordRequest request) {
+        log.info("Editing password of user_id={}", identity);
+        userService.changeUserPassword(identity, request);
     }
 }
