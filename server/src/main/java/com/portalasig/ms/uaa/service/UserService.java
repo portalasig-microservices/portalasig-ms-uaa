@@ -15,6 +15,7 @@ import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
 import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.CsvUser;
+import com.portalasig.ms.uaa.dto.EmailAddressRequest;
 import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
@@ -124,7 +125,6 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    @Transactional
     public UserDetails loadUserByUsername(String username) {
         return userRepository.findByIdentity(Long.parseLong(username)).map(user -> {
             Set<UserRoleEntity> userRoles = user.getUserRoles();
@@ -139,6 +139,7 @@ public class UserService implements UserDetailsService {
         }).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+    @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User findUserByIdentity(Long identity) {
         log.debug("Find user by identity: {}", identity);
         UserEntity user = userRepository.findByIdentity(identity)
@@ -165,6 +166,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void createUsersFromCsv(InputStream stream) {
         try (CSVReader reader = new CSVReader(new InputStreamReader(stream))) {
             StopWatch stopWatch = new StopWatch();
@@ -204,6 +206,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     public User upsertUser(UserRequest userRequest) {
         UserEntity userEntity;
         Optional<UserEntity> existingUser = userRepository.findByIdentity(userRequest.getIdentity());
@@ -224,6 +227,8 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(userEntity);
     }
 
+    @Transactional
+    @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public void changeUserPassword(Long identity, UserEditPasswordRequest request) {
         UserEntity existingUser = userRepository.findByIdentity(identity).orElseThrow(
                 () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
@@ -233,6 +238,7 @@ public class UserService implements UserDetailsService {
         log.info("Password successfully edited for user_id={}", identity);
     }
 
+    @Transactional
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User updateEmailSettings(Long identity, EmailSettingRequest request) {
         if (request.getEmailSettings().isEmpty()) {
@@ -245,6 +251,22 @@ public class UserService implements UserDetailsService {
         userEntity.setEmailSettings(String.join(",", emailSettings));
         userEntity = userRepository.save(userEntity);
 
+        return userMapper.toDto(userEntity);
+    }
+
+    @Transactional
+    @PreAuthorize("@userAuthorizer.isOwner(#identity)")
+    public User updateEmailAddress(Long identity, EmailAddressRequest request) {
+
+        UserEntity userEntity = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (userEntity != null) {
+            throw new ConflictException("Email already exists");
+        }
+        userEntity = userRepository.findByIdentity(identity).orElseThrow(
+                () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
+        );
+        userEntity.setEmail(request.getEmail());
+        userEntity = userRepository.save(userEntity);
         return userMapper.toDto(userEntity);
     }
 }
