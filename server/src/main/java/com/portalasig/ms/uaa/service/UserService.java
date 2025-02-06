@@ -15,6 +15,7 @@ import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
 import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.CsvUser;
+import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserEditPasswordRequest;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -100,7 +102,10 @@ public class UserService implements UserDetailsService {
             userEntity.setIdentity(request.getIdentity());
             userEntity.setEmail(request.getEmail());
             userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-            userEntity.setUsername(request.getUsername() == null ? request.getEmail() : request.getUsername());
+            userEntity.setUsername(request.getUsername() == null ?
+                    request.getIdentity().toString() :
+                    request.getUsername()
+            );
             userEntity.setUserRoles(userRoleEntities);
             userEntity.setEmailSettings(EmailSetting.defaultEmailSettings());
             userEntity.setCreatedDate(Instant.now());
@@ -206,7 +211,7 @@ public class UserService implements UserDetailsService {
             userEntity = userMapper.toEntity(userRequest);
             userEntity.setEmailSettings(EmailSetting.defaultEmailSettings());
             userEntity.setPassword(passwordEncoder.encode(defaultPassword));
-            userEntity.setUsername(userRequest.getEmail());
+            userEntity.setUsername(userRequest.getIdentity().toString());
         } else {
             userEntity = userMapper.toEntityFromExisting(existingUser.get(), userRequest);
         }
@@ -226,5 +231,20 @@ public class UserService implements UserDetailsService {
         existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(existingUser);
         log.info("Password successfully edited for user_id={}", identity);
+    }
+
+    @PreAuthorize("@userAuthorizer.isOwner(#identity)")
+    public User updateEmailSettings(Long identity, EmailSettingRequest request) {
+        if (request.getEmailSettings().isEmpty()) {
+            throw new BadRequestException("Email settings cannot be empty");
+        }
+        UserEntity userEntity = userRepository.findByIdentity(identity).orElseThrow(
+                () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
+        );
+        List<String> emailSettings = request.getEmailSettings().stream().map(EmailSetting::getCode).toList();
+        userEntity.setEmailSettings(String.join(",", emailSettings));
+        userEntity = userRepository.save(userEntity);
+
+        return userMapper.toDto(userEntity);
     }
 }
