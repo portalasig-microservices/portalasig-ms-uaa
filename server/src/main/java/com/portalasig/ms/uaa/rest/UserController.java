@@ -2,7 +2,9 @@ package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.dto.Paginated;
+import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RestPaths;
+import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.service.UserService;
@@ -17,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,5 +67,17 @@ public class UserController {
             @ApiParam(
                     value = "Pagination information", required = true) Pageable pageable) {
         return userService.findAll(studentsOnly, professorsOnly, pageable);
+    }
+
+    @ApiOperation(value = "Update user email settings", response = User.class)
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "User email settings updated successfully"),
+            @ApiResponse(code = 400, message = "Invalid email settings")})
+    @PutMapping(RestPaths.User.IDENTITY + RestPaths.User.EMAIL_SETTINGS)
+    public User updateEmailSettings(
+            @PathVariable Long identity,
+            @RequestBody EmailSettingRequest request
+    ) {
+        return userService.updateEmailSettings(identity, request);
     }
 }

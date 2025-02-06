@@ -10,8 +10,9 @@ public class RestPaths {
 
     public static class User {
         public static final String USER = "/user";
-    public static final String REGISTER = "/register";
-    public static final String IDENTITY = "{identity:\\d+}";
+        public static final String REGISTER = "/register";
+        public static final String IDENTITY = "{identity:\\d+}";
+        public static final String EMAIL_SETTINGS = "/email-settings";
     }
 
     public static class Admin {
