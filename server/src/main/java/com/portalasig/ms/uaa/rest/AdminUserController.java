@@ -50,7 +50,6 @@ public class AdminUserController {
     @ApiOperation(value = "Bulk create users from CSV file")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Users created successfully"),
             @ApiResponse(code = 400, message = "Invalid CSV file")})
-    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping(RestPaths.Admin.IMPORT_USERS)
     public void createUsersFromCsv(
             @ApiParam(value = "CSV file containing user data", required = true)
@@ -70,7 +69,6 @@ public class AdminUserController {
                     @ApiResponse(code = 500, message = "Internal server error")
             }
     )
-    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping()
     public User upsertUser(
             @Valid @RequestBody UserRequest userRequest) {
@@ -86,7 +84,6 @@ public class AdminUserController {
                     @ApiResponse(code = 500, message = "Internal server error")
             }
     )
-    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping(RestPaths.User.IDENTITY + RestPaths.Admin.EDIT_PASSWORD)
     public void changeUserPassword (
             @PathVariable Long identity,

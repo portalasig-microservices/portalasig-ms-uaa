@@ -2,8 +2,8 @@ package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.dto.Paginated;
-import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RestPaths;
+import com.portalasig.ms.uaa.dto.EmailAddressRequest;
 import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
@@ -79,5 +79,17 @@ public class UserController {
             @RequestBody EmailSettingRequest request
     ) {
         return userService.updateEmailSettings(identity, request);
+    }
+
+    @ApiOperation(value = "Update user email address", response = User.class)
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "User email address updated successfully"),
+            @ApiResponse(code = 400, message = "Invalid email address")})
+    @PutMapping(RestPaths.User.IDENTITY + RestPaths.User.EMAIL_ADDRESS)
+    public User updateEmailAddress(
+            @PathVariable Long identity,
+            @RequestBody EmailAddressRequest request
+    ) {
+        return userService.updateEmailAddress(identity, request);
     }
 }

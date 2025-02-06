@@ -13,6 +13,7 @@ public class RestPaths {
         public static final String REGISTER = "/register";
         public static final String IDENTITY = "{identity:\\d+}";
         public static final String EMAIL_SETTINGS = "/email-settings";
+        public static final String EMAIL_ADDRESS = "/email";
     }
 
     public static class Admin {

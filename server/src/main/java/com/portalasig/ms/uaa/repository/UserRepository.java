@@ -1,6 +1,7 @@
 package com.portalasig.ms.uaa.repository;
 
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +24,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             WHERE userRole.role.name IN :roles
             """)
     Page<UserEntity> findAllUsers(@Param("roles") Set<String> roles, Pageable pageable);
+
+    Optional<UserEntity> findByEmail(@NotNull String email);
 }
