@@ -7,7 +7,7 @@ CREATE TABLE user
   first_name     VARCHAR(100) NOT NULL COMMENT 'first name',
   last_name      VARCHAR(100) NOT NULL COMMENT 'last name',
   identity       BIGINT(9)   NOT NULL COMMENT 'identity number',
-  email_settings VARCHAR(128) NOT NULL COMMENT 'email settings',
+  email_settings VARCHAR(128) COMMENT 'email settings',
   created_date   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
   updated_date   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (user_id),

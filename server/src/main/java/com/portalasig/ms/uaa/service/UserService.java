@@ -241,14 +241,15 @@ public class UserService implements UserDetailsService {
     @Transactional
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User updateEmailSettings(Long identity, EmailSettingRequest request) {
-        if (request.getEmailSettings().isEmpty()) {
-            throw new BadRequestException("Email settings cannot be empty");
-        }
         UserEntity userEntity = userRepository.findByIdentity(identity).orElseThrow(
                 () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
         );
         List<String> emailSettings = request.getEmailSettings().stream().map(EmailSetting::getCode).toList();
-        userEntity.setEmailSettings(String.join(",", emailSettings));
+        String emailSettingsString = null;
+        if (!emailSettings.isEmpty()) {
+            emailSettingsString = String.join(",", emailSettings);
+        }
+        userEntity.setEmailSettings(emailSettingsString);
         userEntity = userRepository.save(userEntity);
 
         return userMapper.toDto(userEntity);

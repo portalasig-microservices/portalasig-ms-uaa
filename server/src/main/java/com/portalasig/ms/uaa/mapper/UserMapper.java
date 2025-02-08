@@ -18,6 +18,7 @@ import org.mapstruct.ReportingPolicy;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -64,7 +65,6 @@ public interface UserMapper {
     @Mapping(source = "emailSettings", target = "emailSettings", qualifiedByName = "decodeEmailSettingsFromString")
     User toDto(UserEntity userEntity);
 
-
     /**
      * Converts a {@link CsvUser} to a {@link UserEntity}.
      *
@@ -86,10 +86,12 @@ public interface UserMapper {
      */
     @Named("decodeEmailSettingsFromString")
     default List<EmailSetting> decodeEmailSettingsFromString(String emailSettings) {
-        return Arrays
-                .stream(emailSettings.split(","))
-                .map(EmailSetting::fromCode)
-                .toList();
+        return emailSettings != null ?
+                Arrays
+                        .stream(emailSettings.split(","))
+                        .map(EmailSetting::fromCode)
+                        .toList() :
+                new ArrayList<>();
     }
 
     /**
@@ -123,5 +125,4 @@ public interface UserMapper {
                 .filter(userRole -> !EXCLUDED_ROLES.contains(RoleType.fromCode(userRole.getRole().getName())))
                 .map(userRole -> UserRole.fromCode(userRole.getRole().getName())).toList();
     }
-
 }
