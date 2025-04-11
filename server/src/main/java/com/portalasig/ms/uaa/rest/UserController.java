@@ -7,12 +7,15 @@ import com.portalasig.ms.uaa.dto.EmailAddressRequest;
 import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
+import com.portalasig.ms.uaa.dto.UserRestorePasswordRequest;
+import com.portalasig.ms.uaa.service.AuthenticationService;
 import com.portalasig.ms.uaa.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final AuthenticationService authenticationService;
 
     @ApiOperation(value = "Register a new user", response = User.class)
     @ApiResponses({@ApiResponse(code = 200, message = "User registered successfully"),
@@ -91,5 +95,33 @@ public class UserController {
             @RequestBody EmailAddressRequest request
     ) {
         return userService.updateEmailAddress(identity, request);
+    }
+
+    @ApiOperation(value = "Request password recovery token")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Recovery token processed")})
+    @PutMapping(RestPaths.User.IDENTITY + RestPaths.User.RESET_PASSWORD)
+    public void requestPasswordRecoveryToken(@PathVariable Long identity) {
+        userService.requestPasswordRecoveryToken(identity);
+    }
+
+    @ApiOperation(value = "Check password recovery token validity")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Token is valid"),
+            @ApiResponse(code = 400, message = "Token is invalid")
+    })
+    @GetMapping(RestPaths.User.RESET_PASSWORD + RestPaths.User.VALIDATE_RECOVERY_TOKEN)
+    public boolean checkPasswordRecoveryToken(@RequestParam String token) {
+        return authenticationService.isPasswordRecoveryTokenValid(token);
+    }
+
+    @ApiOperation(value = "Reset user password with recovery token")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Password has been changed successfully"),
+            @ApiResponse(code = 400, message = "Password change failed"),
+    })
+    @PutMapping(RestPaths.User.RESET_PASSWORD)
+    public void changePassword(@Valid @RequestBody UserRestorePasswordRequest request) {
+        userService.resetUserPassword(request);
     }
 }

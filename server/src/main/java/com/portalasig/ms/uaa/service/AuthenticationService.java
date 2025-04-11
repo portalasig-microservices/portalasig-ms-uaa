@@ -5,6 +5,7 @@ import com.portalasig.ms.uaa.dto.ExchangeToken;
 import com.portalasig.ms.uaa.dto.LoginRequest;
 import com.portalasig.ms.uaa.dto.RefreshTokenRequest;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static com.portalasig.ms.uaa.service.TokenCreatorService.PASSWORD_RECOVERY_TOKEN_TYPE;
+
 /**
  * Service responsible for managing user authentication and token generation. It handles login, access token creation,
  * and refresh token handling. You could say it's a custom implementation of OAuth grant_type password and
@@ -26,6 +29,7 @@ import java.time.temporal.ChronoUnit;
  */
 @Service
 @AllArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final TokenCreatorService tokenCreatorService;
@@ -96,6 +100,21 @@ public class AuthenticationService {
                     .username(decodedJwt.getClaim("username")).build();
         } catch (JwtException e) {
             throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid refresh token");
+        }
+    }
+
+    public boolean isPasswordRecoveryTokenValid(String token) {
+        try {
+            Jwt recoveryToken = jwtDecoder.decode(token);
+            if (!PASSWORD_RECOVERY_TOKEN_TYPE.equals(recoveryToken.getClaimAsString("type"))) {
+                log.error("Token has invalid type token_type={}", recoveryToken.getClaimAsString("type"));
+                throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
+            }
+            Instant now = Instant.now();
+            return recoveryToken.getExpiresAt() != null && recoveryToken.getExpiresAt().isAfter(now);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Token has invalid expiration date");
+            throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
         }
     }
 }

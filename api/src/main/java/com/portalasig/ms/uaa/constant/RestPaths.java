@@ -14,6 +14,8 @@ public class RestPaths {
         public static final String IDENTITY = "/{identity:\\d+}";
         public static final String EMAIL_SETTINGS = "/email-settings";
         public static final String EMAIL_ADDRESS = "/email";
+        public static final String RESET_PASSWORD = "/reset-password" ;
+        public static final String VALIDATE_RECOVERY_TOKEN = "/validate-recovery-token" ;
     }
 
     public static class Admin {

@@ -9,7 +9,11 @@ import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.commons.rest.exception.ConflictException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
+import com.portalasig.ms.notify.client.EmailNotifyClient;
+import com.portalasig.ms.notify.constant.EmailTemplate;
+import com.portalasig.ms.notify.dto.EmailRequest;
 import com.portalasig.ms.uaa.constant.EmailSetting;
+import com.portalasig.ms.uaa.constant.RestPaths;
 import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
@@ -21,6 +25,8 @@ import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserEditPasswordRequest;
 import com.portalasig.ms.uaa.dto.UserRequest;
+import com.portalasig.ms.uaa.dto.UserRestorePasswordRequest;
+import com.portalasig.ms.uaa.email.template.PasswordRecoveryTemplate;
 import com.portalasig.ms.uaa.mapper.UserMapper;
 import com.portalasig.ms.uaa.repository.RoleRepository;
 import com.portalasig.ms.uaa.repository.UserRepository;
@@ -28,6 +34,7 @@ import com.portalasig.ms.uaa.repository.UserRoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +44,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
@@ -73,6 +83,14 @@ public class UserService implements UserDetailsService {
 
     @Value("${ms.uaa.tools.users.default-password}")
     private final String defaultPassword;
+
+    @Qualifier("emailNotifyClientV1")
+    private final EmailNotifyClient emailNotifyClient;
+
+    @Value("${portalasig.fe.url}")
+    private final String frontEndUrl;
+    private final TokenCreatorService tokenCreatorService;
+    private final JwtDecoder jwtDecoder;
 
     private static Set<String> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
         Set<String> roles = new HashSet<>();
@@ -269,5 +287,66 @@ public class UserService implements UserDetailsService {
         userEntity.setEmail(request.getEmail());
         userEntity = userRepository.save(userEntity);
         return userMapper.toDto(userEntity);
+    }
+
+    public void requestPasswordRecoveryToken(Long identity) {
+        UserEntity userEntity = userRepository.findByIdentity(identity).orElseThrow(
+                () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
+        );
+
+        String passwordResetToken = tokenCreatorService.createPasswordResetToken(userEntity.getIdentity());
+        String url = String.format("%s/%s%s", frontEndUrl, passwordResetToken, RestPaths.User.RESET_PASSWORD);
+        PasswordRecoveryTemplate passwordRecoveryTemplate = PasswordRecoveryTemplate
+                .builder()
+                .title("Nos llegó una solicitud para recuperar tu contraseña, ¿Fuiste tú?")
+                .target(String.format(
+                        "Hola, %s. Sigue los pasos a continuación para recuperar tu contraseña:",
+                        userEntity.getFirstName()))
+                .primaryBody("Si no lo solicitaste, por favor ignora este mensaje.")
+                .secondaryBody("Ingrese al portal a través del siguiente enlace para recuperar su contraseña:")
+                .url(url)
+                .urlLabel("Recuperar contraseña")
+                .closingMessage("Por su seguridad, el enlace vencerá en 5 minutos.")
+                .build();
+
+        emailNotifyClient.sendApplicationEmail(EmailRequest
+                        .builder()
+                        .emailTo(userEntity.getEmail())
+                        .subject(String.format("¡Hola, %s! ¿Solicitaste recuperar tu contraseña?", userEntity.getFirstName()))
+                        .template(EmailTemplate.APP_NOTIFICATION)
+                        .templateConfiguration(passwordRecoveryTemplate)
+                        .build()
+                )
+                .doOnSuccess(response -> log.info("Password recovery email sent to {}", userEntity.getEmail()))
+                .doOnError(error -> log.error(error.getMessage(), error))
+                .subscribe();
+    }
+
+    public void resetUserPassword(UserRestorePasswordRequest request) {
+        Jwt recoveryToken = decodeRecoveryToken(request.getRecoveryToken());
+        Long identity = getIdentityFromToken(recoveryToken);
+        UserEntity userEntity = userRepository.findByIdentity(identity)
+                .orElseThrow(
+                        () -> new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token")
+                );
+        userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(userEntity);
+    }
+
+    @SuppressWarnings("AvoidCatchingGenericException")
+    private Long getIdentityFromToken(Jwt recoveryToken) {
+        try {
+            return Long.valueOf(recoveryToken.getSubject());
+        } catch (Exception e) {
+            throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
+        }
+    }
+
+    private Jwt decodeRecoveryToken(String token) {
+        try {
+            return jwtDecoder.decode(token);
+        } catch (JwtException e) {
+            throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid recovery token");
+        }
     }
 }
