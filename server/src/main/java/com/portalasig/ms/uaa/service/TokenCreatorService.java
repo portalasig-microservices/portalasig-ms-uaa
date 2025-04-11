@@ -25,6 +25,8 @@ public final class TokenCreatorService {
 
     private final JwtEncoder jwtEncoder;
 
+    public final static String PASSWORD_RECOVERY_TOKEN_TYPE = "password_recovery";
+
     public Jwt createAccessToken(Authentication authentication, String username) {
         Instant now = Instant.now();
         JwtClaimsSet tokenClaims = JwtClaimsSet.builder().subject(authentication.getName())
@@ -67,5 +69,17 @@ public final class TokenCreatorService {
 
         JwsHeader jwsHeader = JwsHeader.with(SignatureAlgorithm.RS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, tokenClaims));
+    }
+
+    public String createPasswordResetToken(Long identity) {
+        Instant now = Instant.now();
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .subject(identity.toString())
+                .issuedAt(now)
+                .expiresAt(now.plus(5, ChronoUnit.MINUTES))
+                .claim("type", PASSWORD_RECOVERY_TOKEN_TYPE)
+                .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 }
