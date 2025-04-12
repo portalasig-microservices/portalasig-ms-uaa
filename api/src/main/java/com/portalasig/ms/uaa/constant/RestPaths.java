@@ -22,4 +22,8 @@ public class RestPaths {
         public static final String IMPORT_USERS = "/_import";
         public static final String EDIT_PASSWORD = "/edit-password";
     }
+
+    public static class FrontEnd {
+        public static final String RESET_PASSWORD = "/reiniciar-contrasena";
+    }
 }

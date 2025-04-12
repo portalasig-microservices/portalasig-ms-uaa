@@ -295,7 +295,7 @@ public class UserService implements UserDetailsService {
         );
 
         String passwordResetToken = tokenCreatorService.createPasswordResetToken(userEntity.getIdentity());
-        String url = String.format("%s/%s%s", frontEndUrl, passwordResetToken, RestPaths.User.RESET_PASSWORD);
+        String url = String.format("%s%s?token=%s", frontEndUrl, RestPaths.FrontEnd.RESET_PASSWORD, passwordResetToken);
         PasswordRecoveryTemplate passwordRecoveryTemplate = PasswordRecoveryTemplate
                 .builder()
                 .title("Nos llegó una solicitud para recuperar tu contraseña, ¿Fuiste tú?")
