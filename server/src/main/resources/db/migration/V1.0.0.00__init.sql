@@ -12,7 +12,10 @@ CREATE TABLE user
   updated_date   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (user_id),
   UNIQUE KEY user_idx1 (username),
-  UNIQUE KEY user_idx2 (`identity`)
+  UNIQUE KEY user_idx2 (`identity`),
+  UNIQUE KEY user_idx3 (email),
+  INDEX user_idx4 (first_name),
+  INDEX user_idx5 (last_name)
 ) COMMENT 'Holds all information related with portalasig users';
 
 CREATE TABLE role

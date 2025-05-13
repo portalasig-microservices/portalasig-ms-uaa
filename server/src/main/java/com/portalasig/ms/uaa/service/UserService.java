@@ -158,7 +158,7 @@ public class UserService implements UserDetailsService {
     }
 
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
-    public User findUserByIdentity(Long identity) {
+    public User getUserByIdentity(Long identity) {
         log.debug("Find user by identity: {}", identity);
         UserEntity user = userRepository.findByIdentity(identity)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));

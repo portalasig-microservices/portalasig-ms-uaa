@@ -9,6 +9,7 @@ import com.portalasig.ms.uaa.dto.RegisterRequest;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRestorePasswordRequest;
 import com.portalasig.ms.uaa.service.AuthenticationService;
+import com.portalasig.ms.uaa.service.FindUserUseCase;
 import com.portalasig.ms.uaa.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(RestConstants.VERSION_ONE + RestPaths.User.USER)
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class UserController {
 
     private final UserService userService;
     private final AuthenticationService authenticationService;
+    private final FindUserUseCase findUserUseCase;
 
     @ApiOperation(value = "Register a new user", response = User.class)
     @ApiResponses({@ApiResponse(code = 200, message = "User registered successfully"),
@@ -47,14 +51,24 @@ public class UserController {
         return userService.registerUser(registerRequest);
     }
 
-    @ApiOperation(value = "Find user by identity", response = User.class)
-    @ApiResponses({@ApiResponse(code = 200, message = "User found successfully"),
+    @ApiOperation(value = "Get user by identity", response = User.class)
+    @ApiResponses({@ApiResponse(code = 200, message = "User retrieved successfully"),
             @ApiResponse(code = 404, message = "User not found")})
     @GetMapping(RestPaths.User.IDENTITY)
-    public User findUserByIdentity(
+    public User getUserByIdentity(
             @ApiParam(value = "Identity of the user to be fetched", required = true)
             @PathVariable Long identity) {
-        return userService.findUserByIdentity(identity);
+        return userService.getUserByIdentity(identity);
+    }
+
+    @ApiOperation(value = "Find user by query", response = User.class)
+    @ApiResponses({@ApiResponse(code = 200, message = "User found successfully"),
+            @ApiResponse(code = 404, message = "User not found")})
+    @GetMapping(RestPaths.User.FIND)
+    public List<User> findUsers(
+            @ApiParam(value = "Query. Partial identity, email or full name", required = true)
+            @RequestParam String query) {
+        return findUserUseCase.findUsers(query);
     }
 
     @ApiOperation(value = "Retrieve all users with optional role-based filtering and pagination",
