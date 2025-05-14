@@ -1,12 +1,12 @@
 CREATE TABLE user
 (
-  user_id        BIGINT(20)   NOT NULL AUTO_INCREMENT COMMENT 'userEntity id',
+  user_id        BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'userEntity id',
   username       VARCHAR(250) NOT NULL COMMENT 'username',
   email          VARCHAR(250) NOT NULL COMMENT 'email',
   password       VARCHAR(100) NOT NULL COMMENT 'password',
   first_name     VARCHAR(100) NOT NULL COMMENT 'first name',
   last_name      VARCHAR(100) NOT NULL COMMENT 'last name',
-  identity       BIGINT(9)   NOT NULL COMMENT 'identity number',
+  identity       BIGINT   NOT NULL COMMENT 'identity number',
   email_settings VARCHAR(128) COMMENT 'email settings',
   created_date   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
   updated_date   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
@@ -14,13 +14,13 @@ CREATE TABLE user
   UNIQUE KEY user_idx1 (username),
   UNIQUE KEY user_idx2 (`identity`),
   UNIQUE KEY user_idx3 (email),
-  INDEX user_idx4 (first_name),
-  INDEX user_idx5 (last_name)
+  INDEX          user_idx4 (first_name),
+  INDEX          user_idx5 (last_name)
 ) COMMENT 'Holds all information related with portalasig users';
 
 CREATE TABLE role
 (
-  role_id      BIGINT(20)   NOT NULL AUTO_INCREMENT COMMENT 'role id',
+  role_id      BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'role id',
   name         VARCHAR(100) NOT NULL COMMENT 'role name',
   description  VARCHAR(250) NOT NULL COMMENT 'role description',
   created_date datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
@@ -31,9 +31,9 @@ CREATE TABLE role
 
 CREATE TABLE user_role
 (
-  user_role_id BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'userEntity roleEntity id',
-  user_id      BIGINT(20) NOT NULL COMMENT 'fk userEntity id',
-  role_id      BIGINT(20) NOT NULL COMMENT 'fk roleEntity id',
+  user_role_id BIGINT    NOT NULL AUTO_INCREMENT COMMENT 'userEntity roleEntity id',
+  user_id      BIGINT    NOT NULL COMMENT 'fk userEntity id',
+  role_id      BIGINT    NOT NULL COMMENT 'fk roleEntity id',
   created_date datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
   updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (user_role_id),
@@ -43,7 +43,7 @@ CREATE TABLE user_role
 
 CREATE TABLE client
 (
-  id                     BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'client id',
+  id                     BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'client id',
   client_id              VARCHAR(255) NOT NULL COMMENT 'string client identifier',
   name                   VARCHAR(100) NOT NULL COMMENT 'client name',
   secret                 VARCHAR(250) NOT NULL COMMENT 'client secret',
