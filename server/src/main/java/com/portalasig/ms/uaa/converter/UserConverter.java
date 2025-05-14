@@ -1,4 +1,4 @@
-package com.portalasig.ms.uaa.service;
+package com.portalasig.ms.uaa.converter;
 
 import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RoleType;

@@ -1,1 +1,2 @@
-com.portalasig.ms.uaa.config.UaaClientAutoConfiguration
+com.portalasig.ms.uaa.config.UserClientAutoConfiguration
+com.portalasig.ms.uaa.config.AdminUserClientAutoConfiguration
