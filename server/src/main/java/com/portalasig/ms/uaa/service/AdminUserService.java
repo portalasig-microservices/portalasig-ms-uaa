@@ -74,6 +74,12 @@ public class AdminUserService {
         return Paginated.wrap(users.map(userMapper::toDto));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<User> getUsers(List<Long> identities) {
+        List<UserEntity> allUsers = userRepository.findAllByIdentity(identities);
+        return allUsers.stream().map(userMapper::toDto).toList();
+    }
+
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteUser(Long identity) {

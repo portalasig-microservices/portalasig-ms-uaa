@@ -39,4 +39,12 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
                 OR lower(concat(u.firstName, ' ', u.lastName)) LIKE lower(concat(:query, '%'))
             """)
     List<UserEntity> smartSearchUsers(@Param("query") String query, Pageable pageable);
+
+    @Query(value = """
+            SELECT u
+            FROM UserEntity u
+            WHERE
+                u.identity IN :identities
+            """)
+    List<UserEntity> findAllByIdentity(@Param("identities") List<Long> identities);
 }

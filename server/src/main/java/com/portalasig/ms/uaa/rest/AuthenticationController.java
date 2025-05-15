@@ -1,6 +1,6 @@
 package com.portalasig.ms.uaa.rest;
 
-import com.portalasig.ms.uaa.client.AuthenticationOperations;
+import com.portalasig.ms.uaa.operation.AuthenticationOperations;
 import com.portalasig.ms.uaa.dto.ExchangeToken;
 import com.portalasig.ms.uaa.dto.LoginRequest;
 import com.portalasig.ms.uaa.dto.RefreshTokenRequest;

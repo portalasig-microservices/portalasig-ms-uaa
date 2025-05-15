@@ -1,7 +1,7 @@
 package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.constants.RestConstants;
-import com.portalasig.ms.uaa.client.AdminUserOperations;
+import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import com.portalasig.ms.uaa.dto.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;

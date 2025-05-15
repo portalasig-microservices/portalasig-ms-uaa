@@ -1,4 +1,4 @@
-package com.portalasig.ms.uaa.client;
+package com.portalasig.ms.uaa.operation;
 
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.dto.Paginated;
@@ -36,8 +36,11 @@ public interface AdminUserOperations {
     Paginated<User> findAllUsers(
             @RequestParam(value = "students_only", required = false, defaultValue = "false") boolean studentsOnly,
             @RequestParam(value = "professors_only", required = false, defaultValue = "false") boolean professorsOnly,
-            @RequestParam int page,
-            @RequestParam int size,
-            @RequestParam(required = false) String sort
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "30") Integer size,
+            @RequestParam(defaultValue = "identity") String sort
     );
+
+    @GetExchange(RestPaths.User.BULK)
+    List<User> getUsers(@RequestBody List<Long> identities);
 }
