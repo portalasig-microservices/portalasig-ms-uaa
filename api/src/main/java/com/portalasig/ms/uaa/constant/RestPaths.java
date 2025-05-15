@@ -17,6 +17,7 @@ public class RestPaths {
         public static final String RESET_PASSWORD = "/reset-password" ;
         public static final String VALIDATE_RECOVERY_TOKEN = "/validate-recovery-token" ;
         public static final String FIND = "/find" ;
+        public static final String BULK = "/bulk";
     }
 
     public static class Admin {

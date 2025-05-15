@@ -2,7 +2,7 @@ package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
-import com.portalasig.ms.uaa.client.AdminUserOperations;
+import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
 import com.portalasig.ms.uaa.service.AdminUserService;
@@ -55,8 +55,19 @@ public class AdminUserController implements AdminUserOperations {
     }
 
     @Override
-    public Paginated<User> findAllUsers(boolean studentsOnly, boolean professorsOnly, int page, int size, String sort) {
+    public Paginated<User> findAllUsers(
+            boolean studentsOnly,
+            boolean professorsOnly,
+            Integer page,
+            Integer size,
+            String sort
+    ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.by(sort)));
         return adminUserService.findAll(studentsOnly, professorsOnly, pageable);
+    }
+
+    @Override
+    public List<User> getUsers(List<Long> identities) {
+        return adminUserService.getUsers(identities);
     }
 }

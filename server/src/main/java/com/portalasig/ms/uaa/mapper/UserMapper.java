@@ -13,7 +13,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
-import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -26,8 +25,7 @@ import java.util.Set;
 /**
  * Mapper for the entity {@link UserEntity} and its DTO {@link User}.
  */
-@Mapper(imports = {Instant.class}, componentModel = MappingConstants.ComponentModel.SPRING,
-        unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(imports = {Instant.class}, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface UserMapper {
 
     List<RoleType> EXCLUDED_ROLES = List.of(RoleType.USER);
@@ -40,6 +38,12 @@ public interface UserMapper {
      * @return the converted user entity
      */
     @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "username", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "emailSettings", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
     UserEntity toEntity(UserRequest request);
 
     /**
@@ -52,6 +56,13 @@ public interface UserMapper {
      * @return the updated user entity
      */
     @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "username", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "emailSettings", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
     UserEntity toEntityFromExisting(@MappingTarget UserEntity userEntity, UserRequest userRequest);
 
     /**
@@ -63,6 +74,8 @@ public interface UserMapper {
      */
     @Mapping(source = "userRoles", target = "roles", qualifiedByName = "fromUserEntityRolesToUserRoles")
     @Mapping(source = "emailSettings", target = "emailSettings", qualifiedByName = "decodeEmailSettingsFromString")
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "username", ignore = true)
     User toDto(UserEntity userEntity);
 
     /**
@@ -75,6 +88,8 @@ public interface UserMapper {
     @Mapping(target = "userRoles", ignore = true)
     @Mapping(target = "createdDate", qualifiedByName = "setDateWithDefault")
     @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "username", ignore = true)
     UserEntity fromCsvUserToUserEntity(CsvUser user);
 
     /**

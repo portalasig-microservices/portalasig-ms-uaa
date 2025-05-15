@@ -1,6 +1,6 @@
 package com.portalasig.ms.uaa.config;
 
-import com.portalasig.ms.uaa.client.AdminUserOperations;
+import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

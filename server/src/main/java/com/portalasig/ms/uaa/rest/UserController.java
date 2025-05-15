@@ -1,6 +1,6 @@
 package com.portalasig.ms.uaa.rest;
 
-import com.portalasig.ms.uaa.client.UserOperations;
+import com.portalasig.ms.uaa.operation.UserOperations;
 import com.portalasig.ms.uaa.dto.EmailAddressRequest;
 import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;

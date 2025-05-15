@@ -1,4 +1,4 @@
-package com.portalasig.ms.uaa.client;
+package com.portalasig.ms.uaa.operation;
 
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.uaa.constant.RestPaths;
