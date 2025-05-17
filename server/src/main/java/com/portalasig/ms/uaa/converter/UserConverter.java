@@ -1,11 +1,9 @@
 package com.portalasig.ms.uaa.converter;
 
 import com.portalasig.ms.uaa.constant.EmailSetting;
-import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
-import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.CsvUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +12,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,17 +22,22 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserConverter {
 
-    public void setCsvUserRoleOrDefault(UserEntity user, CsvUser csvUser, List<RoleEntity> roleEntities) {
-        RoleType userRole = RoleType.fromCode(csvUser.getRole());
-        Set<String> userRoles = new HashSet<>(RoleType.getDefaultRolesString());
-        if (userRole != RoleType.INVALID) {
-            userRoles.add(userRole.getCode());
+    public void setCsvUserRoleOrDefault(UserEntity user, CsvUser csvUser, List<RoleEntity> allRoles) {
+        UserRole userRole = UserRole.fromCode(csvUser.getRole());
+        Set<UserRole> requiredRoles = new HashSet<>(Set.of(UserRole.STUDENT));
+        if (userRole != UserRole.INVALID) {
+            requiredRoles.add(userRole);
         }
-        Set<UserRoleEntity> userRoleEntities = roleEntities.stream()
-                .filter(role -> userRoles.contains(role.getName()))
-                .map(role -> UserRoleEntity.builder().role(role).user(user).build())
+
+        Map<UserRole, RoleEntity> roleMap = allRoles.stream()
+                .collect(Collectors.toMap(RoleEntity::getRole, r -> r));
+
+        Set<RoleEntity> assignedRoles = requiredRoles.stream()
+                .map(roleMap::get)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        user.setUserRoles(userRoleEntities);
+
+        user.setRoles(assignedRoles);
     }
 
     public void setUserInformation(UserEntity user, CsvUser csvUser, String defaultPassword) {
@@ -62,40 +67,27 @@ public class UserConverter {
         return String.join(",", activeFeatures);
     }
 
-    public void setUserRoles(UserRole userRole, List<RoleEntity> roleEntities, UserEntity userEntity) {
-        List<UserRole> incomingUserRoles = new ArrayList<>();
+    public void setUserRoles(UserRole userRole, List<RoleEntity> allRoles, UserEntity userEntity) {
+        List<UserRole> incomingRoles = new ArrayList<>();
 
         if (userRole.isAllowed()) {
-            incomingUserRoles.add(userRole);
+            incomingRoles.add(userRole);
         } else {
-            incomingUserRoles.add(UserRole.STUDENT);
+            incomingRoles.add(UserRole.STUDENT);
         }
 
-        if (userEntity.getUserRoles() == null) {
-            userEntity.setUserRoles(new HashSet<>());
+        if (userEntity.getRoles() == null) {
+            userEntity.setRoles(new HashSet<>());
         }
 
-        Set<UserRoleEntity> userRoleEntities = roleEntities.stream()
-                .filter(roleEntity ->
-                        incomingUserRoles.contains(UserRole.fromCode(roleEntity.getName())) ||
-                                roleEntity.getName().equals(RoleType.USER.name())
-                )
-                .map(role ->
-                        UserRoleEntity.builder().role(role).user(userEntity).build()).collect(Collectors.toSet()
-                );
+        Map<UserRole, RoleEntity> roleMap = allRoles.stream()
+                .collect(Collectors.toMap(RoleEntity::getRole, role -> role));
 
-        List<String> userRoleNames = userRoleEntities
-                .stream()
-                .map(userRoleEntity -> userRoleEntity.getRole().getName())
-                .toList();
+        Set<RoleEntity> incomingRoleEntities = incomingRoles.stream()
+                .map(role -> roleMap.getOrDefault(UserRole.fromCode(role.getCode()), null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
-        userEntity.getUserRoles().forEach(userRoleEntity -> {
-            if (!userRoleNames.contains(userRoleEntity.getRole().getName())) {
-                userRoleEntity.setShouldBeRemoved(true);
-            }
-        });
-
-        userEntity.getUserRoles().removeIf(UserRoleEntity::isShouldBeRemoved);
-        userEntity.getUserRoles().addAll(userRoleEntities);
+        userEntity.setRoles(incomingRoleEntities);
     }
 }

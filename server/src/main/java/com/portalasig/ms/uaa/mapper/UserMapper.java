@@ -1,10 +1,9 @@
 package com.portalasig.ms.uaa.mapper;
 
 import com.portalasig.ms.uaa.constant.EmailSetting;
-import com.portalasig.ms.uaa.constant.RoleType;
 import com.portalasig.ms.uaa.constant.UserRole;
+import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
-import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.CsvUser;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
@@ -12,7 +11,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -28,8 +26,6 @@ import java.util.Set;
 @Mapper(imports = {Instant.class}, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface UserMapper {
 
-    List<RoleType> EXCLUDED_ROLES = List.of(RoleType.USER);
-
     /**
      * Converts a {@link UserRequest} to a {@link UserEntity}.
      *
@@ -37,13 +33,13 @@ public interface UserMapper {
      *         the user request to convert
      * @return the converted user entity
      */
-    @Mapping(target = "userRoles", ignore = true)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "emailSettings", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     UserEntity toEntity(UserRequest request);
 
     /**
@@ -55,7 +51,6 @@ public interface UserMapper {
      *         the user request to convert
      * @return the updated user entity
      */
-    @Mapping(target = "userRoles", ignore = true)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "password", ignore = true)
@@ -63,6 +58,7 @@ public interface UserMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     @Mapping(target = "authorities", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     UserEntity toEntityFromExisting(@MappingTarget UserEntity userEntity, UserRequest userRequest);
 
     /**
@@ -72,8 +68,6 @@ public interface UserMapper {
      *         the user entity to convert
      * @return the converted user DTO
      */
-    @Mapping(source = "userRoles", target = "roles", qualifiedByName = "fromUserEntityRolesToUserRoles")
-    @Mapping(source = "emailSettings", target = "emailSettings", qualifiedByName = "decodeEmailSettingsFromString")
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "username", ignore = true)
     User toDto(UserEntity userEntity);
@@ -85,9 +79,7 @@ public interface UserMapper {
      *         the CSV user to convert
      * @return the converted user entity
      */
-    @Mapping(target = "userRoles", ignore = true)
-    @Mapping(target = "createdDate", qualifiedByName = "setDateWithDefault")
-    @Mapping(target = "updatedDate", qualifiedByName = "setDateWithDefault")
+    @Mapping(target = "roles", ignore = true)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "username", ignore = true)
     UserEntity fromCsvUserToUserEntity(CsvUser user);
@@ -99,7 +91,6 @@ public interface UserMapper {
      *         the email settings string to decode
      * @return the list of email settings
      */
-    @Named("decodeEmailSettingsFromString")
     default List<EmailSetting> decodeEmailSettingsFromString(String emailSettings) {
         return emailSettings != null ?
                 Arrays
@@ -116,8 +107,7 @@ public interface UserMapper {
      *         the date string to convert
      * @return the converted date as an {@link Instant}
      */
-    @Named("setDateWithDefault")
-    static Instant setDateWithDefault(String dateString) {
+    default Instant setDateWithDefault(String dateString) {
         if (dateString == null) {
             return Instant.now();
         }
@@ -128,16 +118,14 @@ public interface UserMapper {
     }
 
     /**
-     * Converts a set of {@link UserRoleEntity} to a list of {@link UserRole}, excluding certain roles.
+     * Converts a set of {@link RoleEntity} to a list of {@link UserRole}, excluding certain roles.
      *
      * @param userRoles
      *         the set of user role entities to convert
      * @return the list of user roles
      */
-    @Named("fromUserEntityRolesToUserRoles")
-    static List<UserRole> fromUserEntityRolesToUserRoles(Set<UserRoleEntity> userRoles) {
+    default List<UserRole> fromRoleEntityToUserRole(Set<RoleEntity> userRoles) {
         return userRoles.stream()
-                .filter(userRole -> !EXCLUDED_ROLES.contains(RoleType.fromCode(userRole.getRole().getName())))
-                .map(userRole -> UserRole.fromCode(userRole.getRole().getName())).toList();
+                .map(entity -> UserRole.fromCode(entity.getRole().getCode())).toList();
     }
 }

@@ -1,6 +1,7 @@
 package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.constants.RestConstants;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import com.portalasig.ms.uaa.dto.User;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,6 @@ public class DemoController {
 
     @GetMapping("/test-client")
     public List<User> testClient(@RequestParam String query) {
-        return adminUserOperations.findUsers(query);
+        return adminUserOperations.findUsers(query, List.of(UserRole.STUDENT, UserRole.PROFESSOR));
     }
 }

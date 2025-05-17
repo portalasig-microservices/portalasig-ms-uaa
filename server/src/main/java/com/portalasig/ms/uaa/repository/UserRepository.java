@@ -1,5 +1,6 @@
 package com.portalasig.ms.uaa.repository;
 
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -21,24 +22,38 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("""
             SELECT user
             FROM UserEntity user
-            JOIN user.userRoles userRole
-            WHERE userRole.role.name IN :roles
+            JOIN user.roles role
+            WHERE role.role IN :roles
             """)
-    Page<UserEntity> findAllUsers(@Param("roles") Set<String> roles, Pageable pageable);
+    Page<UserEntity> findAllUsers(@Param("roles") Set<UserRole> roles, Pageable pageable);
 
     Optional<UserEntity> findByEmail(@NotNull String email);
 
     @Query(value = """
-            SELECT u
+            SELECT DISTINCT u
             FROM UserEntity u
-            WHERE
+            WHERE (
                 str(u.identity) LIKE concat(:query, '%')
                 OR lower(u.email) LIKE lower(concat(:query, '%'))
                 OR lower(u.firstName) LIKE lower(concat(:query, '%'))
                 OR lower(u.lastName) LIKE lower(concat(:query, '%'))
                 OR lower(concat(u.firstName, ' ', u.lastName)) LIKE lower(concat(:query, '%'))
+            )
+            AND EXISTS (
+                SELECT 1
+                FROM u.roles r1
+                WHERE r1.role IN (:userRoles)
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM u.roles r2
+                WHERE r2.role NOT IN (:userRoles)
+            )
             """)
-    List<UserEntity> smartSearchUsers(@Param("query") String query, Pageable pageable);
+    List<UserEntity> smartSearchUsers(
+            @Param("query") String query,
+            @Param("userRoles") List<UserRole> userRoles,
+            Pageable pageable);
 
     @Query(value = """
             SELECT u

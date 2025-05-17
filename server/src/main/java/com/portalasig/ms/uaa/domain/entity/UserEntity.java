@@ -1,12 +1,13 @@
 package com.portalasig.ms.uaa.domain.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -60,13 +61,20 @@ public class UserEntity implements UserDetails {
     @LastModifiedDate
     private Instant updatedDate;
 
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.ALL}, orphanRemoval = true)
+    @ManyToMany
+    @JoinTable(
+            name = "user_role_link",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
     @EqualsAndHashCode.Exclude
-    private Set<UserRoleEntity> userRoles;
+    private Set<RoleEntity> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName())).toList();
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getRole().getCode()))
+                .toList();
     }
 
     @Override

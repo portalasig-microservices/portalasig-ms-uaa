@@ -3,23 +3,21 @@ package com.portalasig.ms.uaa.service;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvValidationException;
-import com.portalasig.ms.commons.constants.Authority;
 import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
 import com.portalasig.ms.uaa.constant.EmailSetting;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.converter.UserConverter;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
-import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.CsvUser;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
 import com.portalasig.ms.uaa.mapper.UserMapper;
 import com.portalasig.ms.uaa.repository.RoleRepository;
 import com.portalasig.ms.uaa.repository.UserRepository;
-import com.portalasig.ms.uaa.repository.UserRoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +46,6 @@ import java.util.Set;
 public class AdminUserService {
 
     private final UserRepository userRepository;
-    private final UserRoleRepository userRoleRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -64,9 +60,11 @@ public class AdminUserService {
     @Value("${ms.uaa.tools.users.default-password}")
     private final String defaultPassword;
 
+    private final RoleRepository roleRepository;
+
     @PreAuthorize("hasAuthority('ADMIN')")
     public Paginated<User> findAll(boolean studentsOnly, boolean professorsOnly, Pageable pageable) {
-        Set<String> roles = getUserRoles(studentsOnly, professorsOnly);
+        Set<UserRole> roles = getUserRoles(studentsOnly, professorsOnly);
         Page<UserEntity> users = userRepository.findAllUsers(roles, pageable);
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found");
@@ -85,8 +83,6 @@ public class AdminUserService {
     public void deleteUser(Long identity) {
         UserEntity user = userRepository.findByIdentity(identity)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
-        userRoleRepository.removeAllByIdsIn(user.getUserRoles().stream().map(UserRoleEntity::getUserRoleId).toList());
-        user.setUserRoles(null);
         userRepository.delete(user);
     }
 
@@ -152,16 +148,16 @@ public class AdminUserService {
         }
     }
 
-    private static Set<String> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
-        Set<String> roles = new HashSet<>();
+    private static Set<UserRole> getUserRoles(boolean studentsOnly, boolean professorsOnly) {
+        Set<UserRole> roles = new HashSet<>();
         if (studentsOnly) {
-            roles.add(Authority.STUDENT.getCode());
+            roles.add(UserRole.STUDENT);
         }
         if (professorsOnly) {
-            roles.add(Authority.PROFESSOR.getCode());
+            roles.add(UserRole.PROFESSOR);
         }
         if (!studentsOnly && !professorsOnly) {
-            roles.addAll(List.of(Authority.STUDENT.getCode(), Authority.PROFESSOR.getCode()));
+            roles.addAll(List.of(UserRole.STUDENT, UserRole.PROFESSOR));
         }
         return roles;
     }
