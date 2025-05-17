@@ -183,10 +183,11 @@ public class UserService implements UserDetailsService {
                 .closingMessage("Por su seguridad, el enlace vencerá en 5 minutos.")
                 .build();
 
+        String subject = String.format("¡Hola, %s! ¿Solicitaste recuperar tu contraseña?", userEntity.getFirstName());
         emailNotifyClient.sendApplicationEmail(EmailRequest
                         .builder()
                         .emailTo(userEntity.getEmail())
-                        .subject(String.format("¡Hola, %s! ¿Solicitaste recuperar tu contraseña?", userEntity.getFirstName()))
+                        .subject(subject)
                         .template(EmailTemplate.APP_NOTIFICATION)
                         .templateConfiguration(passwordRecoveryTemplate)
                         .build()
