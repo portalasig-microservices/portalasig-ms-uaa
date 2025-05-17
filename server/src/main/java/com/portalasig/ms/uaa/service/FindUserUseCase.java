@@ -1,5 +1,7 @@
 package com.portalasig.ms.uaa.service;
 
+import com.portalasig.ms.commons.rest.exception.BadRequestException;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.mapper.UserMapper;
@@ -27,9 +29,26 @@ public class FindUserUseCase {
     private final Integer maxResultSize;
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'PROFESSOR')")
-    public List<User> findUsers(String query) {
+    public List<User> findUsers(String query, List<UserRole> userRoles) {
+        List<UserRole> validRoles = validateAndTransformToEntityRoles(userRoles);
         Pageable pageable = PageRequest.of(0, maxResultSize);
-        List<UserEntity> potentialUsers = userRepository.smartSearchUsers(query.trim().toLowerCase(), pageable);
+        List<UserEntity> potentialUsers = userRepository.smartSearchUsers(
+                query.trim().toLowerCase(),
+                validRoles,
+                pageable
+        );
         return potentialUsers.stream().map(userMapper::toDto).toList();
+    }
+
+    public List<UserRole> validateAndTransformToEntityRoles(List<UserRole> userRoles) {
+        if (userRoles == null || userRoles.isEmpty()) {
+            userRoles = List.of(UserRole.STUDENT, UserRole.PROFESSOR);
+        }
+        for (UserRole userRole : userRoles) {
+            if (!userRole.isAllowed()) {
+                throw new BadRequestException("Roles filtering denied");
+            }
+        }
+        return userRoles;
     }
 }

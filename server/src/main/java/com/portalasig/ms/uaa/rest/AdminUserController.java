@@ -2,6 +2,7 @@ package com.portalasig.ms.uaa.rest;
 
 import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
@@ -50,8 +51,8 @@ public class AdminUserController implements AdminUserOperations {
     }
 
     @Override
-    public List<User> findUsers(String query) {
-        return findUserUseCase.findUsers(query);
+    public List<User> findUsers(String query, List<UserRole> userRoles) {
+        return findUserUseCase.findUsers(query, userRoles);
     }
 
     @Override

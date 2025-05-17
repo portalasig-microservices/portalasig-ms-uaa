@@ -8,10 +8,9 @@ import com.portalasig.ms.notify.constant.EmailTemplate;
 import com.portalasig.ms.notify.dto.EmailRequest;
 import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RestPaths;
-import com.portalasig.ms.uaa.constant.RoleType;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.domain.entity.RoleEntity;
 import com.portalasig.ms.uaa.domain.entity.UserEntity;
-import com.portalasig.ms.uaa.domain.entity.UserRoleEntity;
 import com.portalasig.ms.uaa.dto.EmailAddressRequest;
 import com.portalasig.ms.uaa.dto.EmailSettingRequest;
 import com.portalasig.ms.uaa.dto.RegisterRequest;
@@ -20,7 +19,6 @@ import com.portalasig.ms.uaa.dto.UserEditPasswordRequest;
 import com.portalasig.ms.uaa.dto.UserRestorePasswordRequest;
 import com.portalasig.ms.uaa.email.template.PasswordRecoveryTemplate;
 import com.portalasig.ms.uaa.mapper.UserMapper;
-import com.portalasig.ms.uaa.repository.RoleRepository;
 import com.portalasig.ms.uaa.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -48,9 +46,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserService implements UserDetailsService {
 
-    public static final Set<String> defaultRoleTypes = Set.of(RoleType.USER.name(), RoleType.STUDENT.name());
+    public static final Set<UserRole> defaultRoleTypes = Set.of(UserRole.STUDENT);
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -65,9 +62,9 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         return userRepository.findByIdentity(Long.parseLong(username)).map(user -> {
-            Set<UserRoleEntity> userRoles = user.getUserRoles();
+            Set<RoleEntity> userRoles = user.getRoles();
             List<SimpleGrantedAuthority> authorities =
-                    userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
+                    userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getCode()))
                             .toList();
             return new org.springframework.security.core.userdetails.User(
                     user.getEmail(),
@@ -80,26 +77,27 @@ public class UserService implements UserDetailsService {
     @Transactional
     public User registerUser(RegisterRequest request) {
         if (!userRepository.existsByIdentity(request.getIdentity())) {
-            Set<RoleEntity> defaultRoleEntities = roleRepository.findAllByNameIn(defaultRoleTypes);
-            UserEntity userEntity = UserEntity.builder().build();
-            Set<UserRoleEntity> userRoleEntities = defaultRoleEntities.stream()
-                    .map(role ->
-                            UserRoleEntity.builder().role(role).user(userEntity).build()).collect(Collectors.toSet()
-                    );
-
-            userEntity.setFirstName(request.getFirstName());
-            userEntity.setLastName(request.getLastName());
-            userEntity.setIdentity(request.getIdentity());
-            userEntity.setEmail(request.getEmail());
-            userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-            userEntity.setUsername(request.getUsername() == null ?
+            Set<RoleEntity> roleEntities = defaultRoleTypes.stream().map(role -> RoleEntity
+                    .builder()
+                    .role(role)
+                    .build()).collect(Collectors.toSet());
+            String username = request.getUsername() == null ?
                     request.getIdentity().toString() :
-                    request.getUsername()
-            );
-            userEntity.setUserRoles(userRoleEntities);
-            userEntity.setEmailSettings(EmailSetting.defaultEmailSettings());
-            userEntity.setCreatedDate(Instant.now());
-            userEntity.setUpdatedDate(Instant.now());
+                    request.getUsername();
+
+            UserEntity userEntity = UserEntity
+                    .builder()
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .identity(request.getIdentity())
+                    .email(request.getEmail())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .username(username)
+                    .roles(roleEntities)
+                    .emailSettings(EmailSetting.defaultEmailSettings())
+                    .createdDate(Instant.now())
+                    .updatedDate(Instant.now())
+                    .build();
 
             log.info(
                     "Registering user: {} {} {}",

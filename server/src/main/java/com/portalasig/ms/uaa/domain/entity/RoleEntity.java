@@ -1,12 +1,15 @@
 package com.portalasig.ms.uaa.domain.entity;
 
 import com.portalasig.ms.commons.persistence.AbstractAuditEntity;
+import com.portalasig.ms.uaa.constant.UserRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -32,11 +35,13 @@ public class RoleEntity extends AbstractAuditEntity {
     private Long id;
 
     @NotNull
-    private String name;
+    @Column(name = "role")
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
     private String description;
 
-    @OneToMany(mappedBy = "role")
+    @ManyToMany(mappedBy = "roles")
     @EqualsAndHashCode.Exclude
-    private Set<UserRoleEntity> users;
+    private Set<UserEntity> users;
 }

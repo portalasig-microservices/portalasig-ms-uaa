@@ -6,7 +6,7 @@ CREATE TABLE user
   password       VARCHAR(100) NOT NULL COMMENT 'password',
   first_name     VARCHAR(100) NOT NULL COMMENT 'first name',
   last_name      VARCHAR(100) NOT NULL COMMENT 'last name',
-  identity       BIGINT   NOT NULL COMMENT 'identity number',
+  identity       BIGINT       NOT NULL COMMENT 'identity number',
   email_settings VARCHAR(128) COMMENT 'email settings',
   created_date   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
   updated_date   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
@@ -21,24 +21,24 @@ CREATE TABLE user
 CREATE TABLE role
 (
   role_id      BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'role id',
-  name         VARCHAR(100) NOT NULL COMMENT 'role name',
+  role         VARCHAR(100) NOT NULL COMMENT 'role name',
   description  VARCHAR(250) NOT NULL COMMENT 'role description',
   created_date datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
   updated_date timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (role_id),
-  KEY          role_idx1 (name)
+  KEY          role_idx1 (role)
 ) COMMENT 'Handle access roles for the application';
 
-CREATE TABLE user_role
+CREATE TABLE user_role_link
 (
-  user_role_id BIGINT    NOT NULL AUTO_INCREMENT COMMENT 'userEntity roleEntity id',
-  user_id      BIGINT    NOT NULL COMMENT 'fk userEntity id',
-  role_id      BIGINT    NOT NULL COMMENT 'fk roleEntity id',
-  created_date datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
-  updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
-  PRIMARY KEY (user_role_id),
-  KEY          user_role_idx1 (user_id),
-  KEY          user_role_idx2 (role_id)
+  user_role_link_id BIGINT    NOT NULL AUTO_INCREMENT COMMENT 'userEntity roleEntity id',
+  user_id           BIGINT    NOT NULL COMMENT 'fk userEntity id',
+  role_id           BIGINT    NOT NULL COMMENT 'fk roleEntity id',
+  created_date      datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
+  updated_date      timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
+  PRIMARY KEY (user_role_link_id),
+  KEY               user_role_link_idx1 (user_id),
+  KEY               user_role_link_idx2 (role_id)
 ) COMMENT 'relationship table between user and roles';
 
 CREATE TABLE client

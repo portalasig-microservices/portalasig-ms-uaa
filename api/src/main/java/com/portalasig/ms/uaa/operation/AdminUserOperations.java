@@ -3,6 +3,7 @@ package com.portalasig.ms.uaa.operation;
 import com.portalasig.ms.commons.constants.RestConstants;
 import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.uaa.constant.RestPaths;
+import com.portalasig.ms.uaa.constant.UserRole;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +31,10 @@ public interface AdminUserOperations {
     User upsertUser(@RequestBody UserRequest userRequest);
 
     @GetExchange(RestPaths.User.FIND)
-    List<User> findUsers(@RequestParam String query);
+    List<User> findUsers(
+            @RequestParam String query,
+            @RequestParam(value = "user_roles", required = false) List<UserRole> userRoles
+    );
 
     @GetExchange
     Paginated<User> findAllUsers(
