@@ -32,6 +32,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query(value = """
             SELECT DISTINCT u
             FROM UserEntity u
+            JOIN u.roles r
             WHERE (
                 str(u.identity) LIKE concat(:query, '%')
                 OR lower(u.email) LIKE lower(concat(:query, '%'))
@@ -39,16 +40,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
                 OR lower(u.lastName) LIKE lower(concat(:query, '%'))
                 OR lower(concat(u.firstName, ' ', u.lastName)) LIKE lower(concat(:query, '%'))
             )
-            AND EXISTS (
-                SELECT 1
-                FROM u.roles r1
-                WHERE r1.role IN (:userRoles)
-            )
-            AND NOT EXISTS (
-                SELECT 1
-                FROM u.roles r2
-                WHERE r2.role NOT IN (:userRoles)
-            )
+            AND r.role IN (:userRoles)
             """)
     List<UserEntity> smartSearchUsers(
             @Param("query") String query,
@@ -57,9 +49,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query(value = """
             SELECT u
-            FROM UserEntity u
-            WHERE
-                u.identity IN :identities
+            FROM UserEntity
+            u
+                    WHERE
+            u.identity IN :identities
             """)
     List<UserEntity> findAllByIdentity(@Param("identities") List<Long> identities);
 }
