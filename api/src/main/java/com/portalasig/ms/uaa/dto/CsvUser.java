@@ -8,6 +8,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO representing a user record parsed from a CSV file.
+ * <p>
+ * This class is used for bulk user import operations and binds each field
+ * to a specific position in the CSV row using {@link com.opencsv.bean.CsvBindByPosition}.
+ * </p>
+ * <p>
+ * It includes user identification fields, metadata such as creation/update dates,
+ * role information, and email settings.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

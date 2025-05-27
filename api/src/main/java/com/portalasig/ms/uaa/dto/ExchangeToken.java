@@ -9,6 +9,13 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+/**
+ * DTO representing a JWT-based authentication response.
+ * <p>
+ * Contains access and refresh tokens, along with metadata such as issuance time,
+ * expiration, and user/client identifiers.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

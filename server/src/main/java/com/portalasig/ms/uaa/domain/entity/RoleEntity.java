@@ -20,6 +20,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+/**
+ * Entity representing a role in the system.
+ * Associates a role (from {@link com.portalasig.ms.uaa.constant.UserRole}) with users.
+ * Extends {@link com.portalasig.ms.commons.persistence.AbstractAuditEntity} for audit fields.
+ */
 @Entity
 @Data
 @AllArgsConstructor

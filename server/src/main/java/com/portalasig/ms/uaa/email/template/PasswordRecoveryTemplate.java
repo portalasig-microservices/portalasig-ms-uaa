@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data model for the password recovery email template.
+ * Contains fields for customizing the email content and recovery link.
+ */
 @Data
 @Builder
 @AllArgsConstructor

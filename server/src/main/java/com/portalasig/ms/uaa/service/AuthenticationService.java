@@ -23,9 +23,8 @@ import java.time.temporal.ChronoUnit;
 import static com.portalasig.ms.uaa.service.TokenCreatorService.PASSWORD_RECOVERY_TOKEN_TYPE;
 
 /**
- * Service responsible for managing user authentication and token generation. It handles login, access token creation,
- * and refresh token handling. You could say it's a custom implementation of OAuth grant_type password and
- * refresh_token.
+ * Service responsible for managing user authentication and token generation. Handles login, access token creation,
+ * refresh token validation, and recovery token verification.
  */
 @Service
 @AllArgsConstructor
@@ -37,31 +36,32 @@ public class AuthenticationService {
     private final JwtDecoder jwtDecoder;
 
     /**
-     * Authenticates a user based on the provided login request and generates a new access token and refresh token.
+     * Authenticates a user based on credentials and generates a new access and refresh token.
      *
      * @param request
      *         the login request containing username and password
-     * @return an {@link ExchangeToken} containing the access token, refresh token, clientId, and username
+     * @return a newly generated {@link ExchangeToken}
      * @throws SystemErrorException
-     *         if the authentication fails due to invalid credentials
+     *         if authentication fails
      */
     public ExchangeToken loginAndGenerateTokens(LoginRequest request) {
         try {
-            Authentication authentication = authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
                             request.getPassword()
-                    ));
+                    )
+            );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             Jwt accessToken = tokenCreatorService.createAccessToken(authentication, request.getUsername());
             Jwt refreshToken = tokenCreatorService.createRefreshToken(authentication, request.getUsername());
 
-            return ExchangeToken
-                    .builder()
+            return ExchangeToken.builder()
                     .accessToken(accessToken.getTokenValue())
                     .refreshToken(refreshToken.getTokenValue())
-                    .issuedAt(Instant.now()).clientId(accessToken.getClaim("client_id"))
+                    .issuedAt(Instant.now())
+                    .clientId(accessToken.getClaim("client_id"))
                     .expiresIn(ChronoUnit.HOURS.getDuration().toSeconds())
                     .username(request.getUsername())
                     .build();
@@ -71,13 +71,13 @@ public class AuthenticationService {
     }
 
     /**
-     * Refreshes the access token based on the provided refresh token request. If the refresh token is valid and has not
-     * expired, a new access token is generated.
+     * Validates a refresh token and issues a new access token.
      *
      * @param request
-     *         the refresh token request containing the refresh token
-     * @return an {@link ExchangeToken} containing the new access token, the original refresh token, clientId, and
-     * username @throws SystemErrorException if the refresh token is invalid or expired
+     *         the refresh token request
+     * @return a new {@link ExchangeToken}
+     * @throws SystemErrorException
+     *         if the refresh token is invalid or expired
      */
     public ExchangeToken refreshAccessToken(RefreshTokenRequest request) {
         try {
@@ -91,18 +91,28 @@ public class AuthenticationService {
 
             Jwt accessToken = tokenCreatorService.refreshAccessToken(decodedJwt);
 
-            return ExchangeToken
-                    .builder()
+            return ExchangeToken.builder()
                     .accessToken(accessToken.getTokenValue())
                     .refreshToken(request.getRefreshToken())
-                    .issuedAt(Instant.now()).clientId(accessToken.getClaim("client_id"))
+                    .issuedAt(Instant.now())
+                    .clientId(accessToken.getClaim("client_id"))
                     .expiresIn(ChronoUnit.HOURS.getDuration().toSeconds())
-                    .username(decodedJwt.getClaim("username")).build();
+                    .username(decodedJwt.getClaim("username"))
+                    .build();
         } catch (JwtException e) {
             throw new SystemErrorException(HttpStatus.UNAUTHORIZED.value(), "Invalid refresh token");
         }
     }
 
+    /**
+     * Validates if the provided recovery token is a valid password recovery token and not expired.
+     *
+     * @param token
+     *         the JWT recovery token
+     * @return true if the token is valid, false otherwise
+     * @throws SystemErrorException
+     *         if the token is invalid, expired, or of the wrong type
+     */
     public boolean isPasswordRecoveryTokenValid(String token) {
         try {
             Jwt recoveryToken = jwtDecoder.decode(token);

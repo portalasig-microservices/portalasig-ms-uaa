@@ -10,6 +10,13 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+
+/**
+ * DTO used for updating the list of email settings associated with a user.
+ * <p>
+ * Each setting represents a type of notification the user can opt into or out of.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

@@ -25,6 +25,11 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Set;
 
+/**
+ * Entity representing a user in the system.
+ * Implements {@link org.springframework.security.core.userdetails.UserDetails} for Spring Security integration.
+ * Contains user credentials, profile information, email settings, and assigned roles.
+ */
 @Entity
 @Data
 @AllArgsConstructor

@@ -8,7 +8,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
+/**
+ * DTO used to capture user registration details.
+ * <p>
+ * Contains basic user information including email, identity, credentials,
+ * and optional profile attributes such as name and username.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

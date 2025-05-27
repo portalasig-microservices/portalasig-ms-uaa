@@ -11,6 +11,13 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * DTO that represents a user within the PortalAsig system.
+ * <p>
+ * Includes identifying attributes such as ID, username, and email,
+ * as well as user metadata like roles and configured email settings.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

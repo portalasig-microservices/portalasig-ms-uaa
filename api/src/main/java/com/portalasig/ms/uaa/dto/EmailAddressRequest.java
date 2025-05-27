@@ -8,6 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO used for updating a user's email address.
+ * <p>
+ * Contains a single non-null email field to be validated and persisted.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

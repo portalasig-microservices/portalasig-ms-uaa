@@ -8,6 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO used by administrators to update a user's password manually.
+ * <p>
+ * Typically used in user management panels or recovery flows where direct password reset is needed.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor
