@@ -9,6 +9,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO used for creating or updating a user's core attributes from an administrative interface.
+ * <p>
+ * Supports identity, name, email, and user role for full control over user records.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

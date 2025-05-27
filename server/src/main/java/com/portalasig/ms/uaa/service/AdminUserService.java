@@ -40,6 +40,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Service responsible for admin operations over users such as retrieving, upserting, deleting or importing from CSV.
+ * Restricted to ADMIN authorities.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -62,6 +66,17 @@ public class AdminUserService {
 
     private final RoleRepository roleRepository;
 
+    /**
+     * Returns paginated users filtered by roles if specified.
+     *
+     * @param studentsOnly
+     *         whether to include only students
+     * @param professorsOnly
+     *         whether to include only professors
+     * @param pageable
+     *         pagination configuration
+     * @return paginated user results
+     */
     @PreAuthorize("hasAuthority('ADMIN')")
     public Paginated<User> findAll(boolean studentsOnly, boolean professorsOnly, Pageable pageable) {
         Set<UserRole> roles = getUserRoles(studentsOnly, professorsOnly);
@@ -72,12 +87,25 @@ public class AdminUserService {
         return Paginated.wrap(users.map(userMapper::toDto));
     }
 
+    /**
+     * Retrieves a list of users by their identity values.
+     *
+     * @param identities
+     *         list of identity IDs
+     * @return list of matching users
+     */
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<User> getUsers(List<Long> identities) {
         List<UserEntity> allUsers = userRepository.findAllByIdentity(identities);
         return allUsers.stream().map(userMapper::toDto).toList();
     }
 
+    /**
+     * Deletes a user by identity.
+     *
+     * @param identity
+     *         the user identity
+     */
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteUser(Long identity) {
@@ -86,23 +114,32 @@ public class AdminUserService {
         userRepository.delete(user);
     }
 
+    /**
+     * Imports a list of users from a CSV input stream.
+     *
+     * @param stream
+     *         input CSV stream
+     */
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void createUsersFromCsv(InputStream stream) {
         try (CSVReader reader = new CSVReader(new InputStreamReader(stream))) {
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
-            // readNext() method reads the line and skips it from the array
+
             String[] header = reader.readNext();
             validateHeader(Arrays.asList(header));
+
             List<CsvUser> csvUsers = new CsvToBeanBuilder<CsvUser>(reader).withType(CsvUser.class).build().parse();
             log.info("Starting users import from csv with user_size={}", csvUsers.size());
+
             List<RoleEntity> roleEntities = roleRepository.findAll();
-            String defaultPassword = passwordEncoder.encode(defaultUser);
-            List<UserEntity> userEntities = csvUsers
-                    .stream()
-                    .map(csvUser -> createUserFromCsv(csvUser, roleEntities, defaultPassword))
+            String encodedPassword = passwordEncoder.encode(defaultUser);
+
+            List<UserEntity> userEntities = csvUsers.stream()
+                    .map(csvUser -> createUserFromCsv(csvUser, roleEntities, encodedPassword))
                     .toList();
+
             userRepository.saveAll(userEntities);
             stopWatch.stop();
             log.info("Import users from csv finished in {}ms", stopWatch.getTotalTimeMillis());
@@ -113,10 +150,18 @@ public class AdminUserService {
         }
     }
 
+    /**
+     * Upserts a user (create or update).
+     *
+     * @param userRequest
+     *         input user data
+     * @return resulting user object
+     */
     @PreAuthorize("hasAuthority('ADMIN')")
     public User upsertUser(UserRequest userRequest) {
         UserEntity userEntity;
         Optional<UserEntity> existingUser = userRepository.findByIdentity(userRequest.getIdentity());
+
         if (existingUser.isEmpty()) {
             userEntity = userMapper.toEntity(userRequest);
             userEntity.setEmailSettings(EmailSetting.defaultEmailSettings());
@@ -125,6 +170,7 @@ public class AdminUserService {
         } else {
             userEntity = userMapper.toEntityFromExisting(existingUser.get(), userRequest);
         }
+
         List<RoleEntity> roleEntities = roleRepository.findAll();
         userConverter.setUserRoles(userRequest.getUserRole(), roleEntities, userEntity);
         userEntity.setCreatedDate(Instant.now());

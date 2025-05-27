@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+/**
+ * Entity representing an OAuth2 client application. Contains client credentials, allowed scopes, grant types,
+ * authentication methods, redirect URIs, and audit timestamps.
+ */
 @Entity
 @Data
 @AllArgsConstructor

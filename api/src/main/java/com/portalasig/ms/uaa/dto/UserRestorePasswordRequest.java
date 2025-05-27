@@ -8,6 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO used for restoring a user's password using a recovery token.
+ * <p>
+ * Contains the recovery token and the new password to apply.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

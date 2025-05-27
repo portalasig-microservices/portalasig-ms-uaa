@@ -8,7 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
+/**
+ * DTO used for user login requests.
+ * <p>
+ * Contains credentials required for authentication, such as username and password.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

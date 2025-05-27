@@ -41,6 +41,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Service class responsible for managing user operations such as registration, password updates, email settings, and
+ * identity-based queries.
+ * <p>
+ * Also integrates with external notification systems for password recovery flows, and implements
+ * {@link UserDetailsService} to support Spring Security authentication.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -59,6 +66,13 @@ public class UserService implements UserDetailsService {
     private final TokenCreatorService tokenCreatorService;
     private final JwtDecoder jwtDecoder;
 
+    /**
+     * Loads a user by identity number for authentication.
+     *
+     * @param username
+     *         the identity string
+     * @return the authenticated user details
+     */
     @Override
     public UserDetails loadUserByUsername(String username) {
         return userRepository.findByIdentity(Long.parseLong(username)).map(user -> {
@@ -74,6 +88,15 @@ public class UserService implements UserDetailsService {
         }).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+    /**
+     * Registers a new user with the default role {@link UserRole#STUDENT}.
+     *
+     * @param request
+     *         the registration request
+     * @return the created user DTO
+     * @throws ConflictException
+     *         if the user identity already exists
+     */
     @Transactional
     public User registerUser(RegisterRequest request) {
         if (!userRepository.existsByIdentity(request.getIdentity())) {
@@ -111,6 +134,15 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    /**
+     * Retrieves a user by their identity number.
+     *
+     * @param identity
+     *         the user identity
+     * @return the corresponding user DTO
+     * @throws ResourceNotFoundException
+     *         if the user is not found
+     */
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User getUserByIdentity(Long identity) {
         log.debug("Find user by identity: {}", identity);
@@ -119,6 +151,16 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(user);
     }
 
+    /**
+     * Changes the user's password, given their identity.
+     *
+     * @param identity
+     *         the user identity
+     * @param request
+     *         the password update request
+     * @throws ResourceNotFoundException
+     *         if the user is not found
+     */
     @Transactional
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public void changeUserPassword(Long identity, UserEditPasswordRequest request) {
@@ -130,6 +172,17 @@ public class UserService implements UserDetailsService {
         log.info("Password successfully edited for user_id={}", identity);
     }
 
+    /**
+     * Updates a user's email notification preferences.
+     *
+     * @param identity
+     *         the user identity
+     * @param request
+     *         the email setting request
+     * @return the updated user DTO
+     * @throws ResourceNotFoundException
+     *         if the user is not found
+     */
     @Transactional
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User updateEmailSettings(Long identity, EmailSettingRequest request) {
@@ -147,10 +200,22 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(userEntity);
     }
 
+    /**
+     * Updates the user's email address, if it's not already used.
+     *
+     * @param identity
+     *         the user identity
+     * @param request
+     *         the new email address
+     * @return the updated user DTO
+     * @throws ConflictException
+     *         if the email already exists
+     * @throws ResourceNotFoundException
+     *         if the user is not found
+     */
     @Transactional
     @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User updateEmailAddress(Long identity, EmailAddressRequest request) {
-
         UserEntity userEntity = userRepository.findByEmail(request.getEmail()).orElse(null);
         if (userEntity != null) {
             throw new ConflictException("Email already exists");
@@ -163,6 +228,14 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(userEntity);
     }
 
+    /**
+     * Sends a password recovery email to the user with a temporary recovery token.
+     *
+     * @param identity
+     *         the user identity
+     * @throws ResourceNotFoundException
+     *         if the user is not found
+     */
     public void requestPasswordRecoveryToken(Long identity) {
         UserEntity userEntity = userRepository.findByIdentity(identity).orElseThrow(
                 () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
@@ -197,6 +270,14 @@ public class UserService implements UserDetailsService {
                 .subscribe();
     }
 
+    /**
+     * Resets the user's password using a valid password recovery token.
+     *
+     * @param request
+     *         contains the recovery token and new password
+     * @throws SystemErrorException
+     *         if the token is invalid or user not found
+     */
     public void resetUserPassword(UserRestorePasswordRequest request) {
         Jwt recoveryToken = decodeRecoveryToken(request.getRecoveryToken());
         Long identity = getIdentityFromToken(recoveryToken);

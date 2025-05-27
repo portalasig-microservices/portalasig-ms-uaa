@@ -8,7 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
+/**
+ * DTO used to request a new access token using a valid refresh token.
+ * <p>
+ * Carries the refresh token issued during initial authentication.
+ * </p>
+ */
 @Data
 @Builder
 @AllArgsConstructor

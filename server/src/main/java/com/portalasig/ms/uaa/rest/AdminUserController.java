@@ -3,9 +3,9 @@ package com.portalasig.ms.uaa.rest;
 import com.portalasig.ms.commons.rest.dto.Paginated;
 import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.uaa.constant.UserRole;
-import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import com.portalasig.ms.uaa.dto.User;
 import com.portalasig.ms.uaa.dto.UserRequest;
+import com.portalasig.ms.uaa.operation.AdminUserOperations;
 import com.portalasig.ms.uaa.service.AdminUserService;
 import com.portalasig.ms.uaa.service.FindUserUseCase;
 import io.swagger.annotations.Api;
@@ -21,6 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * REST controller for administrative user operations, implementing {@link AdminUserOperations}.
+ * <p>
+ * Provides endpoints to manage users: creation, deletion, update, bulk import, and search.
+ */
 @RestController
 @RequiredArgsConstructor
 @Api(value = "Admin User Management Controller", tags = "Admin User Management")
