@@ -1,5 +1,6 @@
 package com.portalasig.ms.uaa.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.UserRole;
 import io.swagger.annotations.ApiModel;
@@ -14,14 +15,15 @@ import java.util.List;
 /**
  * DTO that represents a user within the PortalAsig system.
  * <p>
- * Includes identifying attributes such as ID, username, and email,
- * as well as user metadata like roles and configured email settings.
+ * Includes identifying attributes such as ID, username, and email, as well as user metadata like roles and configured
+ * email settings.
  * </p>
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(description = "Details about the user")
 public class User {
 
@@ -48,4 +50,13 @@ public class User {
 
     @ApiModelProperty(value = "Which emails users desired to receive", example = "EVENT, EVALUATION, ASSIGNMENT")
     private List<EmailSetting> emailSettings;
+
+    /**
+     * Returns the full name of the user by concatenating the first and last name.
+     *
+     * @return the user's full name in the format "John Doe"
+     */
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 }

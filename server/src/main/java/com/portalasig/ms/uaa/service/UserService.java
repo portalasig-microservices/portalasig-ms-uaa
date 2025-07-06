@@ -3,9 +3,9 @@ package com.portalasig.ms.uaa.service;
 import com.portalasig.ms.commons.rest.exception.ConflictException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
-import com.portalasig.ms.notify.client.EmailNotifyClient;
 import com.portalasig.ms.notify.constant.EmailTemplate;
 import com.portalasig.ms.notify.dto.EmailRequest;
+import com.portalasig.ms.notify.operation.EmailOperations;
 import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RestPaths;
 import com.portalasig.ms.uaa.constant.UserRole;
@@ -58,8 +58,8 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    @Qualifier("emailNotifyClientV1")
-    private final EmailNotifyClient emailNotifyClient;
+    @Qualifier("clientCredentialsEmailClientV1")
+    private final EmailOperations emailOperations;
 
     @Value("${portalasig.fe.url}")
     private final String frontEndUrl;
@@ -257,17 +257,15 @@ public class UserService implements UserDetailsService {
                 .build();
 
         String subject = String.format("¡Hola, %s! ¿Solicitaste recuperar tu contraseña?", userEntity.getFirstName());
-        emailNotifyClient.sendApplicationEmail(EmailRequest
+        log.info("Sending password recovery email to subject={}", userEntity.getEmail());
+        emailOperations.sendEmail(EmailRequest
                         .builder()
                         .emailTo(userEntity.getEmail())
                         .subject(subject)
                         .template(EmailTemplate.APP_NOTIFICATION)
                         .templateConfiguration(passwordRecoveryTemplate)
                         .build()
-                )
-                .doOnSuccess(response -> log.info("Password recovery email sent to {}", userEntity.getEmail()))
-                .doOnError(error -> log.error(error.getMessage(), error))
-                .subscribe();
+        );
     }
 
     /**
