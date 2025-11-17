@@ -19,6 +19,7 @@ import com.portalasig.ms.uaa.dto.UserEditPasswordRequest;
 import com.portalasig.ms.uaa.dto.UserRestorePasswordRequest;
 import com.portalasig.ms.uaa.email.template.PasswordRecoveryTemplate;
 import com.portalasig.ms.uaa.mapper.UserMapper;
+import com.portalasig.ms.uaa.repository.RoleRepository;
 import com.portalasig.ms.uaa.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Service class responsible for managing user operations such as registration, password updates, email settings, and
@@ -55,6 +55,7 @@ public class UserService implements UserDetailsService {
 
     public static final Set<UserRole> defaultRoleTypes = Set.of(UserRole.STUDENT);
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -100,10 +101,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public User registerUser(RegisterRequest request) {
         if (!userRepository.existsByIdentity(request.getIdentity())) {
-            Set<RoleEntity> roleEntities = defaultRoleTypes.stream().map(role -> RoleEntity
-                    .builder()
-                    .role(role)
-                    .build()).collect(Collectors.toSet());
+            Set<RoleEntity> defaultRoles = roleRepository.findAllByRoleIn(defaultRoleTypes);
             String username = request.getUsername() == null ?
                     request.getIdentity().toString() :
                     request.getUsername();
@@ -116,17 +114,17 @@ public class UserService implements UserDetailsService {
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .username(username)
-                    .roles(roleEntities)
+                    .roles(defaultRoles)
                     .emailSettings(EmailSetting.defaultEmailSettings())
                     .createdDate(Instant.now())
                     .updatedDate(Instant.now())
                     .build();
 
             log.info(
-                    "Registering user: {} {} {}",
+                    "Registering user: first_name={} last_name={} identity={}",
                     userEntity.getFirstName(),
                     userEntity.getLastName(),
-                    userEntity.getEmail()
+                    userEntity.getIdentity()
             );
             return userMapper.toDto(userRepository.save(userEntity));
         } else {
@@ -143,7 +141,6 @@ public class UserService implements UserDetailsService {
      * @throws ResourceNotFoundException
      *         if the user is not found
      */
-    @PreAuthorize("@userAuthorizer.isOwner(#identity)")
     public User getUserByIdentity(Long identity) {
         log.debug("Find user by identity: {}", identity);
         UserEntity user = userRepository.findByIdentity(identity)
