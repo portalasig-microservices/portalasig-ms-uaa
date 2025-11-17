@@ -2,10 +2,10 @@ CREATE TABLE user
 (
   user_id        BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'userEntity id',
   username       VARCHAR(250) NOT NULL COMMENT 'username',
-  email          VARCHAR(250) NOT NULL COMMENT 'email',
+  email          VARCHAR(250) COMMENT 'email',
   password       VARCHAR(100) NOT NULL COMMENT 'password',
-  first_name     VARCHAR(100) NOT NULL COMMENT 'first name',
-  last_name      VARCHAR(100) NOT NULL COMMENT 'last name',
+  first_name     VARCHAR(100) COMMENT 'first name',
+  last_name      VARCHAR(100) COMMENT 'last name',
   identity       BIGINT       NOT NULL COMMENT 'identity number',
   email_settings VARCHAR(128) COMMENT 'email settings',
   created_date   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',

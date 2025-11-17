@@ -45,7 +45,6 @@ public class UserEntity implements UserDetails {
 
     private String username;
 
-    @NotNull
     private String email;
 
     @NotNull
@@ -55,6 +54,7 @@ public class UserEntity implements UserDetails {
 
     private String lastName;
 
+    @NotNull
     private Long identity;
 
     @NotNull

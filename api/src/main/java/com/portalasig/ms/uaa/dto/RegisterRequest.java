@@ -23,7 +23,6 @@ import lombok.NoArgsConstructor;
 public class RegisterRequest {
 
     @ApiModelProperty(value = "The email of the user", required = true)
-    @NotNull
     private String email;
 
     @ApiModelProperty(value = "The unique identity of the user", required = true)

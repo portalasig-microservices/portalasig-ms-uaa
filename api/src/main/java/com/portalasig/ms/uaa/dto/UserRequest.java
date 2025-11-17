@@ -35,7 +35,6 @@ public class UserRequest {
     private String lastName;
 
     @ApiModelProperty(value = "The email of the user")
-    @NotNull
     private String email;
 
     @ApiModelProperty(value = "The user role")
