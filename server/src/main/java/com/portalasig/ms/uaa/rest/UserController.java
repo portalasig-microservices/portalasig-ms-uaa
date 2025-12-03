@@ -13,7 +13,10 @@ import io.swagger.annotations.Api;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * REST controller that handles user-related operations such as registration, password management, and email settings.
@@ -43,6 +46,11 @@ public class UserController implements UserOperations {
     @Override
     public User register(RegisterRequest registerRequest) {
         return userService.registerUser(registerRequest);
+    }
+
+    @Override
+    public List<User> bulkRegister(@RequestBody List<RegisterRequest> request) {
+        return userService.bulkRegister(request);
     }
 
     @Override
