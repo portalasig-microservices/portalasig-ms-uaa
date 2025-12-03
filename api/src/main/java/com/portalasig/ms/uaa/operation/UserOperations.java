@@ -16,9 +16,11 @@ import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
 
+import java.util.List;
+
 /**
- * Defines the HTTP client contract for interacting with the User API.
- * Provides methods for user registration, password recovery, and email preference updates.
+ * Defines the HTTP client contract for interacting with the User API. Provides methods for user registration, password
+ * recovery, and email preference updates.
  */
 @HttpExchange(RestConstants.VERSION_ONE + RestPaths.User.BASE)
 public interface UserOperations {
@@ -26,16 +28,28 @@ public interface UserOperations {
     /**
      * Registers a new user.
      *
-     * @param registerRequest the registration details
+     * @param registerRequest
+     *         the registration details
      * @return the created {@link User}
      */
     @PostExchange(RestPaths.User.REGISTER)
     User register(@RequestBody RegisterRequest registerRequest);
 
     /**
+     * Register bulk users.
+     *
+     * @param request
+     *         the bulk registration request
+     * @return list of registered users
+     */
+    @PostExchange(RestPaths.User.REGISTER + RestPaths.User.BULK)
+    List<User> bulkRegister(@RequestBody List<RegisterRequest> request);
+
+    /**
      * Fetches a user by their identity.
      *
-     * @param identity the user's identity
+     * @param identity
+     *         the user's identity
      * @return the corresponding {@link User}, or null if not found
      */
     @GetExchange(RestPaths.User.IDENTITY)
@@ -44,8 +58,10 @@ public interface UserOperations {
     /**
      * Updates the user's email notification settings.
      *
-     * @param identity the user's identity
-     * @param request  the email settings to apply
+     * @param identity
+     *         the user's identity
+     * @param request
+     *         the email settings to apply
      * @return the updated {@link User}
      */
     @PutExchange(RestPaths.User.IDENTITY + RestPaths.User.EMAIL_SETTINGS)
@@ -54,8 +70,10 @@ public interface UserOperations {
     /**
      * Updates the user's email address.
      *
-     * @param identity the user's identity
-     * @param request  the new email address
+     * @param identity
+     *         the user's identity
+     * @param request
+     *         the new email address
      * @return the updated {@link User}
      */
     @PutExchange(RestPaths.User.IDENTITY + RestPaths.User.EMAIL_ADDRESS)
@@ -64,7 +82,8 @@ public interface UserOperations {
     /**
      * Initiates the password recovery process for the user.
      *
-     * @param identity the user's identity
+     * @param identity
+     *         the user's identity
      */
     @PutExchange(RestPaths.User.IDENTITY + RestPaths.User.RESET_PASSWORD)
     void requestPasswordRecoveryToken(@PathVariable Long identity);
@@ -72,7 +91,8 @@ public interface UserOperations {
     /**
      * Validates a password recovery token.
      *
-     * @param token the recovery token
+     * @param token
+     *         the recovery token
      * @return {@code true} if the token is valid, {@code false} otherwise
      */
     @GetExchange(RestPaths.User.RESET_PASSWORD + RestPaths.User.VALIDATE_RECOVERY_TOKEN)
@@ -81,7 +101,8 @@ public interface UserOperations {
     /**
      * Changes the user's password using a valid recovery token.
      *
-     * @param request the recovery token and new password
+     * @param request
+     *         the recovery token and new password
      */
     @PutExchange(RestPaths.User.RESET_PASSWORD)
     void changePasswordFromRecoveryToken(@RequestBody UserRestorePasswordRequest request);
@@ -89,8 +110,10 @@ public interface UserOperations {
     /**
      * Changes a user's password (admin-only endpoint).
      *
-     * @param identity the target user's identity
-     * @param request  the new password details
+     * @param identity
+     *         the target user's identity
+     * @param request
+     *         the new password details
      */
     @PostExchange(RestPaths.User.IDENTITY + RestPaths.Admin.EDIT_PASSWORD)
     void changeUserPassword(@PathVariable Long identity, @RequestBody UserEditPasswordRequest request);

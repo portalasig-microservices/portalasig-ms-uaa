@@ -68,7 +68,6 @@ public interface UserMapper {
      *         the user entity to convert
      * @return the converted user DTO
      */
-    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "username", ignore = true)
     User toDto(UserEntity userEntity);
 

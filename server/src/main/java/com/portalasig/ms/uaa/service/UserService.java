@@ -38,7 +38,9 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -61,6 +63,9 @@ public class UserService implements UserDetailsService {
 
     @Qualifier("clientCredentialsEmailClientV1")
     private final EmailOperations emailOperations;
+
+    @Value("${ms.uaa.tools.users.default-password}")
+    private final String defaultPassword;
 
     @Value("${portalasig.fe.url}")
     private final String frontEndUrl;
@@ -101,35 +106,76 @@ public class UserService implements UserDetailsService {
     @Transactional
     public User registerUser(RegisterRequest request) {
         if (!userRepository.existsByIdentity(request.getIdentity())) {
-            Set<RoleEntity> defaultRoles = roleRepository.findAllByRoleIn(defaultRoleTypes);
-            String username = request.getUsername() == null ?
-                    request.getIdentity().toString() :
-                    request.getUsername();
-
-            UserEntity userEntity = UserEntity
-                    .builder()
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
-                    .identity(request.getIdentity())
-                    .email(request.getEmail())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .username(username)
-                    .roles(defaultRoles)
-                    .emailSettings(EmailSetting.defaultEmailSettings())
-                    .createdDate(Instant.now())
-                    .updatedDate(Instant.now())
-                    .build();
-
+            UserEntity userEntity = createUserToRegister(request);
             log.info(
                     "Registering user: first_name={} last_name={} identity={}",
                     userEntity.getFirstName(),
                     userEntity.getLastName(),
                     userEntity.getIdentity()
             );
-            return userMapper.toDto(userRepository.save(userEntity));
+            userEntity = userRepository.save(userEntity);
+            return userMapper.toDto(userEntity);
         } else {
             throw new ConflictException("User already exists");
         }
+    }
+
+    /**
+     * Bulk register users.
+     *
+     * @param request
+     *         the bulk registration request
+     * @return list of registered users
+     */
+    public List<User> bulkRegister(List<RegisterRequest> request) {
+        List<User> users = new ArrayList<>();
+        List<UserEntity> newUserEntities = new ArrayList<>();
+        request.forEach(registerRequest -> {
+            Optional<UserEntity> optionalUserEntity = userRepository.findByIdentity(registerRequest.getIdentity());
+            if (optionalUserEntity.isPresent()) {
+                users.add(userMapper.toDto(optionalUserEntity.get()));
+            } else {
+                UserEntity userEntity = createUserToRegister(registerRequest);
+                newUserEntities.add(userEntity);
+            }
+        });
+        if (!newUserEntities.isEmpty()) {
+            List<Long> identities = newUserEntities.stream().map(UserEntity::getIdentity).toList();
+            log.info("Registering new identities={}", identities);
+            List<UserEntity> userEntities = userRepository.saveAll(newUserEntities);
+            List<User> newUsers = userEntities.stream().map(userMapper::toDto).toList();
+            users.addAll(newUsers);
+        }
+        return users;
+    }
+
+    /**
+     * Creates a user entity to register from a register request.
+     *
+     * @param request
+     *         the user register request
+     * @return a user entity ready to be persisted
+     */
+    public UserEntity createUserToRegister(RegisterRequest request) {
+        Set<RoleEntity> defaultRoles = roleRepository.findAllByRoleIn(defaultRoleTypes);
+        String username = request.getUsername() == null ?
+                request.getIdentity().toString() :
+                request.getUsername();
+        String password = request.getPassword() == null ? defaultPassword : request.getPassword();
+
+        return UserEntity
+                .builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .identity(request.getIdentity())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(password))
+                .username(username)
+                .roles(defaultRoles)
+                .emailSettings(EmailSetting.defaultEmailSettings())
+                .createdDate(Instant.now())
+                .updatedDate(Instant.now())
+                .build();
     }
 
     /**
@@ -144,8 +190,8 @@ public class UserService implements UserDetailsService {
     public User getUserByIdentity(Long identity) {
         log.debug("Find user by identity: {}", identity);
         UserEntity user = userRepository.findByIdentity(identity)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("User %s not found", identity)));
-        return userMapper.toDto(user);
+                .orElse(null);
+        return user == null ? null : userMapper.toDto(user);
     }
 
     /**
@@ -256,12 +302,12 @@ public class UserService implements UserDetailsService {
         String subject = String.format("¡Hola, %s! ¿Solicitaste recuperar tu contraseña?", userEntity.getFirstName());
         log.info("Sending password recovery email to subject={}", userEntity.getEmail());
         emailOperations.sendEmail(EmailRequest
-                        .builder()
-                        .emailTo(userEntity.getEmail())
-                        .subject(subject)
-                        .template(EmailTemplate.APP_NOTIFICATION)
-                        .templateConfiguration(passwordRecoveryTemplate)
-                        .build()
+                .builder()
+                .emailTo(userEntity.getEmail())
+                .subject(subject)
+                .template(EmailTemplate.APP_NOTIFICATION)
+                .templateConfiguration(passwordRecoveryTemplate)
+                .build()
         );
     }
 
