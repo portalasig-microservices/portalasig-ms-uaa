@@ -1,4 +1,4 @@
-CREATE TABLE user
+CREATE TABLE `user`
 (
   user_id        BIGINT       NOT NULL AUTO_INCREMENT COMMENT 'userEntity id',
   username       VARCHAR(250) NOT NULL COMMENT 'username',
