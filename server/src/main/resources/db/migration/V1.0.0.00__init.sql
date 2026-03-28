@@ -9,7 +9,7 @@ CREATE TABLE `user`
   identity       BIGINT       NOT NULL COMMENT 'identity number',
   email_settings VARCHAR(128) COMMENT 'email settings',
   created_date   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
-  updated_date   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
+  updated_date   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (user_id),
   UNIQUE KEY user_idx1 (username),
   UNIQUE KEY user_idx2 (`identity`),
@@ -24,7 +24,7 @@ CREATE TABLE role
   role         VARCHAR(100) NOT NULL COMMENT 'role name',
   description  VARCHAR(250) NOT NULL COMMENT 'role description',
   created_date datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
-  updated_date timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
+  updated_date datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (role_id),
   KEY          role_idx1 (role)
 ) COMMENT 'Handle access roles for the application';
@@ -35,7 +35,7 @@ CREATE TABLE user_role_link
   user_id           BIGINT    NOT NULL COMMENT 'fk userEntity id',
   role_id           BIGINT    NOT NULL COMMENT 'fk roleEntity id',
   created_date      datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
-  updated_date      timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
+  updated_date      datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (user_role_link_id),
   KEY               user_role_link_idx1 (user_id),
   KEY               user_role_link_idx2 (role_id)
@@ -53,7 +53,7 @@ CREATE TABLE client
   redirect_uri           VARCHAR(250) NOT NULL COMMENT 'redirect uri for client',
   redirect_uri_logout    VARCHAR(250) NOT NULL COMMENT 'redirect uri logout for client',
   created_date           datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date and time this row was created',
-  updated_date           timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
+  updated_date           datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'date and time this row was last updated',
   PRIMARY KEY (id),
   KEY                    client_idx1 (name)
 ) COMMENT 'Handles oauth2 clients for the login process';
