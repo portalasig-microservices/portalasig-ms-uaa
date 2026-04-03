@@ -112,6 +112,9 @@ public interface UserMapper {
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS X");
+        if (dateString.contains("+00:00")) {
+            dateString = dateString.replace("+00:00", "Z");
+        }
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateString, formatter);
         return offsetDateTime.toInstant();
     }
