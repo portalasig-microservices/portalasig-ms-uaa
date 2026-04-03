@@ -111,7 +111,7 @@ public interface UserMapper {
             return Instant.now();
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS X");
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(dateString, formatter);
         return offsetDateTime.toInstant();
     }
