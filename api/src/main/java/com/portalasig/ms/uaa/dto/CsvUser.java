@@ -28,7 +28,7 @@ public class CsvUser {
 
     @ApiModelProperty(value = "The unique identity of the user")
     @CsvBindByPosition(position = 1)
-    private Long identity;
+    private String identity;
 
     @ApiModelProperty(value = "The first name of the user")
     @CsvBindByPosition(position = 3)
