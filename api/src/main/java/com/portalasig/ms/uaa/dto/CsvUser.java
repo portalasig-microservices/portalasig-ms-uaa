@@ -27,38 +27,38 @@ import lombok.NoArgsConstructor;
 public class CsvUser {
 
     @ApiModelProperty(value = "The unique identity of the user")
-    @CsvBindByPosition(position = 1)
+    @CsvBindByPosition(position = 0)
     private String identity;
 
     @ApiModelProperty(value = "The first name of the user")
-    @CsvBindByPosition(position = 3)
+    @CsvBindByPosition(position = 1)
     private String firstName;
 
     @ApiModelProperty(value = "The last name of the user")
-    @CsvBindByPosition(position = 4)
+    @CsvBindByPosition(position = 2)
     private String lastName;
 
     @ApiModelProperty(value = "The email of the user")
-    @CsvBindByPosition(position = 5)
+    @CsvBindByPosition(position = 3)
     private String email;
 
     @ApiModelProperty(value = "Indicates whether the user is active")
-    @CsvBindByPosition(position = 6)
+    @CsvBindByPosition(position = 4)
     private boolean active;
 
     @ApiModelProperty(value = "The date when the user was created")
-    @CsvBindByPosition(position = 7)
+    @CsvBindByPosition(position = 5)
     private String createdDate;
 
     @ApiModelProperty(value = "The date when the user was last updated")
-    @CsvBindByPosition(position = 8)
+    @CsvBindByPosition(position = 6)
     private String updatedDate;
 
     @ApiModelProperty(value = "The role of the user")
-    @CsvBindByPosition(position = 9)
+    @CsvBindByPosition(position = 7)
     private String role;
 
     @ApiModelProperty(value = "Email settings of the user as an integer-expressed bitmask")
-    @CsvBindByPosition(position = 10)
+    @CsvBindByPosition(position = 8)
     private Integer emailSettings;
 }

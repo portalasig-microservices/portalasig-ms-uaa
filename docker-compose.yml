@@ -1,8 +1,8 @@
 services:
   database:
     environment:
-      MYSQL_DATABASE: 'sstest'
-      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: 'patest'
+      MYSQL_ROOT_PASSWORD: 'p0rt4l4s1g'
     image: mysql:8.0
     ports:
       - '11110:3306'

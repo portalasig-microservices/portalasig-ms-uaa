@@ -4,7 +4,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import com.portalasig.ms.commons.rest.dto.Paginated;
-import com.portalasig.ms.commons.rest.exception.BadRequestException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
 import com.portalasig.ms.uaa.constant.EmailSetting;
@@ -57,9 +56,6 @@ public class AdminUserService {
     private final HashSet<String> inputCsvHeader;
 
     private final UserConverter userConverter;
-
-    @Value("${ms.uaa.tools.users.default-user}")
-    private final String defaultUser;
 
     @Value("${ms.uaa.tools.users.default-password}")
     private final String defaultPassword;
@@ -134,7 +130,7 @@ public class AdminUserService {
             log.info("Starting users import from csv with user_size={}", csvUsers.size());
 
             List<RoleEntity> roleEntities = roleRepository.findAll();
-            String encodedPassword = passwordEncoder.encode(defaultUser);
+            String encodedPassword = passwordEncoder.encode(defaultPassword);
 
             List<UserEntity> userEntities = csvUsers.stream()
                     .map(csvUser -> createUserFromCsv(csvUser, roleEntities, encodedPassword))
@@ -143,10 +139,12 @@ public class AdminUserService {
             userRepository.saveAll(userEntities);
             stopWatch.stop();
             log.info("Import users from csv finished in {}ms", stopWatch.getTotalTimeMillis());
-        } catch (CsvValidationException | IOException e) {
+        } catch (IOException e) {
             throw new SystemErrorException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Something went wrong while parsing csv file", e);
+        } catch (CsvValidationException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -189,9 +187,9 @@ public class AdminUserService {
 
     private void validateHeader(List<String> fileHeader) {
         HashSet<String> fileHeaderSet = new HashSet<>(fileHeader);
-        if (!fileHeaderSet.containsAll(inputCsvHeader)) {
-            throw new BadRequestException("Invalid csv header");
-        }
+//        if (!fileHeaderSet.containsAll(inputCsvHeader)) {
+//            throw new BadRequestException("Invalid csv header");
+//        }
     }
 
     private static Set<UserRole> getUserRoles(boolean studentsOnly, boolean professorsOnly) {

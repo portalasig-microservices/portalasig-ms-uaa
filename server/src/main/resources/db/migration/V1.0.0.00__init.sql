@@ -58,9 +58,13 @@ CREATE TABLE client
   KEY                    client_idx1 (name)
 ) COMMENT 'Handles oauth2 clients for the login process';
 
--- BCrypt hash for 'p0rt4l4s1g'
--- (strength 10)
 INSERT INTO client (client_id, name, secret, scopes, grant_types, authentication_methods, redirect_uri, redirect_uri_logout)
 VALUES
-('portalasig_engine', 'portalasig_engine', '$2a$10$7QJQ1dVYQxY8QJv1YzF7QeY8k9vHq7ZC2Qe9l8QwFz3Yk5m1Z7n2K', '', 'client_credentials', '', '', ''),
-('portalasig_client', 'portalasig_client', '$2a$10$7QJQ1dVYQxY8QJv1YzF7QeY8k9vHq7ZC2Qe9l8QwFz3Yk5m1Z7n2K', 'openid,profile,email,phone,address', 'password', '', '', '');
+('portalasig_engine', 'portalasig_engine', '$2a$10$YJCEI8dDtdCIavcqrgC3K.f09Cy5OQtuICola6FwGWUxUAy5cd5d6', 'read,write', 'authorization_code,refresh_token,client_credentials', 'client_secret_basic,client_secret_post,client_secret_jwt', '', ''),
+('portalasig_client', 'portalasig_client', '$2a$10$YJCEI8dDtdCIavcqrgC3K.f09Cy5OQtuICola6FwGWUxUAy5cd5d6', 'read,write', 'authorization_code,refresh_token,client_credentials', 'client_secret_basic,client_secret_post,client_secret_jwt', '', '');
+
+INSERT INTO role (role_id, role, description)
+VALUES
+(1, 'ADMIN', 'Admin Role'),
+(3, 'STUDENT', 'Student Role'),
+(4, 'PROFESSOR', 'Professor Role');
