@@ -11,6 +11,7 @@ import com.portalasig.ms.uaa.service.UserService;
 import com.portalasig.ms.uaa.utils.JwtTokenHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -63,6 +64,9 @@ public class SecurityConfiguration {
 
     private final ObjectMapper objectMapper;
     private final CurrentAuthentication currentAuthentication;
+
+    @Value("${spring.security.oauth2.authorizationserver.issuer}")
+    private String issuer;
 
     /**
      * Generates an RSA key pair.
@@ -179,7 +183,9 @@ public class SecurityConfiguration {
      */
     @Bean
     AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
+        return AuthorizationServerSettings.builder()
+                .issuer(issuer)
+                .build();
     }
 
     /**

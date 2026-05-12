@@ -3,9 +3,9 @@ package com.portalasig.ms.uaa.service;
 import com.portalasig.ms.commons.rest.exception.ConflictException;
 import com.portalasig.ms.commons.rest.exception.ResourceNotFoundException;
 import com.portalasig.ms.commons.rest.exception.SystemErrorException;
-import com.portalasig.ms.notify.constant.EmailTemplate;
-import com.portalasig.ms.notify.dto.EmailRequest;
-import com.portalasig.ms.notify.operation.EmailOperations;
+//import com.portalasig.ms.notify.constant.EmailTemplate;
+//import com.portalasig.ms.notify.dto.EmailRequest;
+//import com.portalasig.ms.notify.operation.EmailOperations;
 import com.portalasig.ms.uaa.constant.EmailSetting;
 import com.portalasig.ms.uaa.constant.RestPaths;
 import com.portalasig.ms.uaa.constant.UserRole;
@@ -24,7 +24,6 @@ import com.portalasig.ms.uaa.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -61,13 +60,13 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    @Qualifier("clientCredentialsEmailClientV1")
-    private final EmailOperations emailOperations;
+    /*@Qualifier("clientCredentialsEmailClientV1")
+    private final EmailOperations emailOperations;*/
 
     @Value("${ms.uaa.tools.users.default-password}")
     private final String defaultPassword;
 
-    @Value("${portalasig.fe.url}")
+    @Value("${portalasig.fe.url:http://localhost:8080}")
     private final String frontEndUrl;
     private final TokenCreatorService tokenCreatorService;
     private final JwtDecoder jwtDecoder;
@@ -301,14 +300,14 @@ public class UserService implements UserDetailsService {
 
         String subject = String.format("¡Hola, %s! ¿Solicitaste recuperar tu contraseña?", userEntity.getFirstName());
         log.info("Sending password recovery email to subject={}", userEntity.getEmail());
-        emailOperations.sendEmail(EmailRequest
+        /*emailOperations.sendEmail(EmailRequest
                 .builder()
                 .emailTo(userEntity.getEmail())
                 .subject(subject)
                 .template(EmailTemplate.APP_NOTIFICATION)
                 .templateConfiguration(passwordRecoveryTemplate)
                 .build()
-        );
+        );*/
     }
 
     /**

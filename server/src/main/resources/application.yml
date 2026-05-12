@@ -4,7 +4,7 @@ spring:
     config:
       label: ms
   config:
-    import: 'configserver:http://localhost:5859'
+    import: 'configserver:http://config-server:5859'
 
   profiles.default: local
 
