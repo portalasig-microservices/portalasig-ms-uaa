@@ -146,7 +146,7 @@ public class SecurityConfiguration {
                         "http://localhost:8080/#/ingresar"))
         );
         http.authorizeHttpRequests(
-                authorize -> authorize.requestMatchers("/v1/auth/**").permitAll().anyRequest().authenticated());
+                authorize -> authorize.requestMatchers("/v1/auth/**", "/actuator/**").permitAll().anyRequest().authenticated());
         http.exceptionHandling(ex -> ex.accessDeniedHandler(accessDeniedHandler()));
         return http.build();
     }
