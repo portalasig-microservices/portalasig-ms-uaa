@@ -232,7 +232,8 @@ public class UserService implements UserDetailsService {
                 () -> new ResourceNotFoundException(String.format("User with user_id=%s not found", identity))
         );
         List<String> emailSettings = request.getEmailSettings().stream().map(EmailSetting::getCode).toList();
-        String emailSettingsString = null;
+        // email_settings is @NotNull: an empty selection is stored as the empty code, never null
+        String emailSettingsString = EmailSetting.INVALID.getCode();
         if (!emailSettings.isEmpty()) {
             emailSettingsString = String.join(",", emailSettings);
         }

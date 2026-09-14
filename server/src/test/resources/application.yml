@@ -1,0 +1,4 @@
+# Shadows the main application.yml during tests: no Config Server import is performed.
+spring:
+  application.name: portalasig-ms-uaa
+  profiles.default: local

@@ -1,0 +1,23 @@
+spring:
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:5860/portalasig/uaa
+
+portalasig:
+  uaa:
+    ms:
+      url: http://localhost:5860/portalasig/uaa
+  notify:
+    ms:
+      url: http://localhost:5870/portalasig/notify
+
+ms:
+  uaa:
+    password-grant:
+      default-client-id: portalasig_client
+    tools:
+      users:
+        default-password: test-default-password
+        csv:
+          input-header: name, lastname, email, identity_card, created_at, updated_at, role, active
